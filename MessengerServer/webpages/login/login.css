@@ -1,0 +1,40 @@
+#wrapper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-right: -50%;
+    transform: translate(-55%, -55%)
+}
+
+#loginForm {
+    min-width: 500px;
+}
+
+#loginForm > *{
+    font-size: xx-large;
+    font-family: 'Comic Sans MS';
+}
+
+#loginForm > input{
+    border: 2px solid black;
+}
+
+#loginForm > button{
+    font-weight: bold;
+}
+
+body, html {
+    height: 100%;
+    margin: 0;
+}
+
+.bg {
+    /* The image used */
+    background-image: url("../background.jpg");
+    /* Full height */
+    height: 100%;
+    /* Center and scale the image nicely */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}

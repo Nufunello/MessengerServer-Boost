@@ -1,0 +1,77 @@
+#wrapper {
+    position: absolute;
+    top: 15%;
+    left: 20%;
+    width: 60%;
+}
+
+
+body, html {
+    height: 100%;
+    margin: 0;
+}
+
+.bg {
+    /* The image used */
+    background-image: url("../background.jpg");
+    /* Full height */
+    height: 100%;
+    /* Center and scale the image nicely */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.column {
+    font-family:'Comic Sans MS';
+    font-size: 38px;
+    border: 2px solid black;
+}
+
+.message {
+    font-size: 22px;
+    width: 80%;
+}
+
+.myMessage {
+    padding-left: 10px;
+    margin-left: 5%;
+    background-color: #cbf1fe;
+}
+
+.chatMessage {
+    padding-right: 10px;
+    margin-left: 15%;
+    text-align: right;
+    background-color: #cde8b5;
+}
+
+#wrapper > table {
+    margin-left: 10%;
+    width: 80%;
+}
+
+#header{
+    background-color: #056691;
+    height: 60px;
+}
+
+#title {
+    text-align: center;
+}
+
+#info {
+    width: 70px;
+}
+
+#info > button {
+    font-size: 42px;
+    height: 100%;
+    width: 100%;
+    background-color: #056691;
+}
+
+#dialog{
+    display: block;
+    height: 600px;
+}

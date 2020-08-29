@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script>
+			function doLogin()
+			{
+				const Http = new XMLHttpRequest();
+				const url='http://127.0.0.1:8001/login';
+				
+				Http.open("POST", url);
+				Http.setRequestHeader('Authorization', 'nufun');
+				Http.timeout = 2000;
+				Http.send();
+
+				Http.onload = function () {
+					switch (Http.status) {
+						case 200:
+							message = "Loginned succesfully";
+							break;
+
+						default:
+							message = "Failed due to: " + Http.statusText;
+							break;
+					}
+
+					alert(message);
+				};
+			}
+		</script>
+		<link rel="stylesheet" href="../login/login.css">
+	</head>
+	<body>
+		<div class="bg"></div>
+		<div id="wrapper">
+			<form id="loginForm">
+				<input type="text" id="loginInput">
+				<button onclick="doLogin()">Login</button>
+			</form>
+		</div>
+	</body>
+</html>
