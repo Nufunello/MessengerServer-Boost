@@ -1,15 +1,15 @@
 #pragma once
 
-#include "Exceptions/RequestException.h"
+#include "Exceptions/RedirectException.h"
 
 namespace Exceptions
 {
     class NotAuthorizedException :
-        public RequestException
+        public RedirectException
     {
     public:
         NotAuthorizedException() :
-            RequestException{"Not authorized", Status::unauthorized}
+            RedirectException{"Not authorized", "/login", Status::unauthorized}
         {}
         virtual ~NotAuthorizedException() = default;
     };

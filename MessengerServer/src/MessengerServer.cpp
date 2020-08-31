@@ -14,19 +14,8 @@
 #include <boost/beast/http/write.hpp>
 #include <boost/beast/http/string_body.hpp>
 
-
-void acceptConnection(boost::asio::io_service& service, Data::AuthorizedUsersMap& authorizedUsersMap, MyRequestHandlers::RootRequestHandler& rootHandler, boost::asio::ip::tcp::acceptor& acceptor)
+MyRequestHandlers::Response getResponse(MyRequestHandlers::RootRequestHandler& rootHandler, MyRequestHandlers::Message& message)
 {
-	boost::asio::streambuf stream;
-
-	boost::asio::ip::tcp::socket socket(service);
-	acceptor.accept(socket);
-
-	boost::beast::http::request_parser<boost::beast::http::string_body> parser;
-	boost::beast::error_code ec;
-	boost::beast::http::read_header(socket, stream, parser, ec);
-
-	const MyRequestHandlers::Message& message = parser.get();
 	const boost::beast::string_view target = message.target();
 
 	MyRequestHandlers::Response response;
@@ -38,9 +27,12 @@ void acceptConnection(boost::asio::io_service& service, Data::AuthorizedUsersMap
 	}
 	catch(const Exceptions::RedirectException& exception)
 	{
+		message.method(MyRequestHandlers::Method::get);
+		message.target(exception.Where);
+		
+		response = getResponse(rootHandler, message);
 		response.result(exception.Code);
 		response.reason(exception.what());
-		response.insert(MyRequestHandlers::Field::host, exception.Where);
 	}
 	catch(const Exceptions::RequestException& exception) 
 	{
@@ -51,6 +43,23 @@ void acceptConnection(boost::asio::io_service& service, Data::AuthorizedUsersMap
 	{
 		response.result(MyRequestHandlers::Status::internal_server_error);
 	}
+
+	return response;
+}
+
+void acceptConnection(boost::asio::io_service& service, boost::asio::ip::tcp::acceptor& acceptor, MyRequestHandlers::RootRequestHandler& rootHandler)
+{
+	boost::asio::streambuf stream;
+
+	boost::asio::ip::tcp::socket socket(service);
+	acceptor.accept(socket);
+
+	boost::beast::http::request_parser<boost::beast::http::string_body> parser;
+	boost::beast::error_code ec;
+	boost::beast::http::read_header(socket, stream, parser, ec);
+
+	MyRequestHandlers::Message& message = parser.get();
+	MyRequestHandlers::Response response = getResponse(rootHandler, message);
 
 	boost::beast::http::write(socket, response);
 
@@ -75,7 +84,7 @@ int main(int argc, char** argv)
 		boost::asio::ip::tcp::acceptor acceptor(service, endpoint);
 		while (true)
 		{
-			acceptConnection(service, authorizedUsersMap, rootHandler, acceptor);
+			acceptConnection(service, acceptor, rootHandler);
 		}
 	}
 	catch(const std::exception& e)

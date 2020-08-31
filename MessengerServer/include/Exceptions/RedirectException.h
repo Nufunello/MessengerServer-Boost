@@ -16,7 +16,7 @@ namespace Exceptions
         ~RedirectException() = default;
         
     public:
-        const boost::string_view& Where;
+        const std::string Where;
 
     };
 }
