@@ -1,16 +1,22 @@
 #pragma once
 
-#include "Handlers/ALoadablePageRequestHandler.h"
-#include "Data/AuthorizedUsersMap.h"
+#include "ARequestHandler.h"
+
+#include "Exceptions/RedirectException.h"
+#include "Exceptions/AlreadyAuthorizedException.h" 
+
+#include "Handlers/ResourceFileMap.h"
 
 namespace MyRequestHandlers
 {
     class LoginRequestHandler :
-        public ALoadablePageRequestHandler
+        public ARequestHandler,
+        public ResourceFileMap
     {
     public:
         LoginRequestHandler(Data::AuthorizedUsersMap& authorizedUsers) :
-            ALoadablePageRequestHandler{"/webpages/login"}, 
+            ARequestHandler{authorizedUsers},
+            ResourceFileMap{"/webpages/login"}, 
             _authorizedUsers{authorizedUsers}
         {}
 
@@ -27,7 +33,16 @@ namespace MyRequestHandlers
         }
 
     protected:
+        virtual Response doGet(boost::string_view currentTarget, const Message& message) override
+        {
+            if (hasRights(message))
+                return ResourceFileMap::getResponseWithPage(currentTarget);
+            else
+                throw Exceptions::AlreadyAuthorizedException();
+        }
+
         virtual Response doPost(boost::string_view currentTarget, const Message& message) override;
+        virtual Response doDelete(boost::string_view currentTarget, const Message& message) override;
 
     private:
         Data::AuthorizedUsersMap& _authorizedUsers;

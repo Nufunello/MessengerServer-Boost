@@ -14,7 +14,8 @@ namespace MyRequestHandlers
         using HandlersMap = std::map<HandlerKey, ARequestHandler::Ptr>;
 
     protected:
-        AMappedRequestHandler(HandlersMap&& map) :
+        AMappedRequestHandler(const Data::AuthorizedUsersMap& authorizedUsers, HandlersMap&& map) :
+            ARequestHandler{authorizedUsers},
             _handlers{std::move(map)}
         {}
 

@@ -29,41 +29,27 @@ void acceptConnection(boost::asio::io_service& service, Data::AuthorizedUsersMap
 	const MyRequestHandlers::Message& message = parser.get();
 	const boost::beast::string_view target = message.target();
 
-	const MyRequestHandlers::Message::const_iterator itMessage = message.find(MyRequestHandlers::Field::cookie);
-
-	const Data::AccessRights& accessRights = itMessage == message.end() 
-												? authorizedUsersMap.getUnathorizedAccessRights() 
-												: authorizedUsersMap.getAccessRights(itMessage->value());
-
 	MyRequestHandlers::Response response;
 
-	if (accessRights.hasAccess(target.to_string(), message.method()))
+	const size_t index = target.find('/') + 1;
+	try
 	{
-		const size_t index = target.find('/') + 1;
-		try
-		{
-			response = rootHandler.processRequest(target.substr(index), message); 
-		}
-		catch(const Exceptions::RedirectException& exception)
-		{
-			response.result(exception.Code);
-			response.reason(exception.what());
-			response.insert(MyRequestHandlers::Field::host, exception.Where);
-		}
-		catch(const Exceptions::RequestException& exception)
-		{
-			response.result(exception.Code);
-			response.reason(exception.what());
-		}
-		catch(const std::exception& exception)
-		{
-			response.result(MyRequestHandlers::Status::internal_server_error);
-		}
+		response = rootHandler.processRequest(target.substr(index), message); 
 	}
-	else
+	catch(const Exceptions::RedirectException& exception)
 	{
-		response.result(MyRequestHandlers::Status::forbidden);
-		response.reason("Not enough rights");
+		response.result(exception.Code);
+		response.reason(exception.what());
+		response.insert(MyRequestHandlers::Field::host, exception.Where);
+	}
+	catch(const Exceptions::RequestException& exception) 
+	{
+		response.result(exception.Code);
+		response.reason(exception.what());
+	}
+	catch(const std::exception& exception)
+	{
+		response.result(MyRequestHandlers::Status::internal_server_error);
 	}
 
 	boost::beast::http::write(socket, response);
@@ -73,20 +59,28 @@ void acceptConnection(boost::asio::io_service& service, Data::AuthorizedUsersMap
 
 int main(int argc, char** argv)
 {
-	const std::string ip = argv[1];
-	const size_t port = atoi(argv[2]);
-	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::address::from_string(ip), port);
-
-	std::cout << "Server is running on " << ip << ":" << port << std::endl;
-
-	boost::asio::io_service service;
-
-	Data::AuthorizedUsersMap authorizedUsersMap;
-	MyRequestHandlers::RootRequestHandler rootHandler{authorizedUsersMap};
-
-	boost::asio::ip::tcp::acceptor acceptor(service, endpoint);
-	while (true)
+	try
 	{
-		acceptConnection(service, authorizedUsersMap, rootHandler, acceptor);
+		const std::string ip = argv[1];
+		const size_t port = atoi(argv[2]);
+		boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::address::from_string(ip), port);
+
+		std::cout << "Server is running on " << ip << ":" << port << std::endl;
+
+		boost::asio::io_service service;
+
+		Data::AuthorizedUsersMap authorizedUsersMap;
+		MyRequestHandlers::RootRequestHandler rootHandler{authorizedUsersMap};
+
+		boost::asio::ip::tcp::acceptor acceptor(service, endpoint);
+		while (true)
+		{
+			acceptConnection(service, authorizedUsersMap, rootHandler, acceptor);
+		}
 	}
+	catch(const std::exception& e)
+	{
+		std::cerr << "Server failed due to " << e.what() << '\n';
+	}
+	
 }

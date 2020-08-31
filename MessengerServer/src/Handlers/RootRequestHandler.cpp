@@ -1,21 +1,20 @@
 #include "Handlers/RootRequestHandler.h"
 
 #include "Handlers/LoginRequestHandler.h"
+#include "Handlers/ChatRequestHandler.h"
 
 using namespace MyRequestHandlers;
 
 namespace {
-    constexpr char LOGIN_RESOURCE[] = "login";
-
     AMappedRequestHandler::HandlersMap getMap(Data::AuthorizedUsersMap& usersMap)
     {
         AMappedRequestHandler::HandlersMap map;
-        map.emplace(LOGIN_RESOURCE, std::make_unique<LoginRequestHandler>(usersMap));
+        map.emplace("login", std::make_unique<LoginRequestHandler>(usersMap));
+        map.emplace("chat", std::make_unique<ChatRequestHandler>(usersMap));
         return map;
     }
 }
 
 RootRequestHandler::RootRequestHandler(Data::AuthorizedUsersMap& usersMap) :
-    AMappedRequestHandler{ getMap(usersMap) },
-    ALoadablePageRequestHandler{"/webpages/"}
+    ARecursiveLoadableHandler{usersMap, getMap(usersMap), "/webpages/"}
 {}

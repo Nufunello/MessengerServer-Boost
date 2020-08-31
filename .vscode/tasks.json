@@ -1,0 +1,49 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "Build",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-g",
+                "-std=c++17",
+                "-Wall",
+                "-I",
+                "${workspaceFolder}/MessengerServer/include/",
+                "-I",
+                "/home/nufunello/c++/boost_1_74_0/",
+                "${workspaceFolder}/MessengerServer/src/*.cpp",
+                "${workspaceFolder}/MessengerServer/src/Handlers/*.cpp",
+                "${workspaceFolder}/MessengerServer/src/Data/*.cpp",
+                "-o",
+                "${workspaceFolder}/Run/MessengerServer.out",
+                "-L",
+                "/home/nufunello/c++/boost_1_74_0/stage/lib/",
+                "-lboost_system",
+                "-lboost_filesystem",
+                "-lboost_thread",
+                "-lpthread"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "dependsOn": ["Copy webpages"]
+        },
+
+        {
+            "type": "shell",
+            "label": "Copy webpages",
+            "command": "cp",
+            "args": [
+                "${workspaceFolder}/MessengerServer/webpages/",
+                "-r",
+                "${workspaceFolder}/Run/"
+            ]
+        }
+    ]
+}

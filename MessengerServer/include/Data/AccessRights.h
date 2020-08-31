@@ -15,6 +15,8 @@ namespace Data
 		using Iterator = std::vector<Method>::const_iterator;
 
 	public:
+		Methods() = default;
+
 		Methods(std::initializer_list<Method>&& list) :
 			_methods(std::move(list))
 		{}
@@ -58,9 +60,11 @@ namespace Data
 		using Resource = std::string;
 
 	private:
-		using Resources = std::map<Resource, Methods>;
+		using ResourcesMethods = std::map<Resource, Methods>;
 
 	public:
+		AccessRights() = default;
+
 		AccessRights(Resource resource, std::initializer_list<Method>&& methods) :
 			_resourceAccessRights{{std::move(resource), Methods{std::move(methods)}}}
 		{}
@@ -68,37 +72,25 @@ namespace Data
 		AccessRights(const AccessRights& accessRights) = default;
 		AccessRights(const AccessRights& accessRights, const Resource& resource, std::initializer_list<Method>&& methods);
 
+		AccessRights(const AccessRights& accessRights, std::initializer_list<std::pair<Resource, std::initializer_list<Method>&&>>&& rights);
+
+
 		virtual ~AccessRights() = default;
 
 	private:
-		Resource getResourceWithoutFile(const Resource& resource) const
-		{
-			const char segmentDivider = '/';
-
-			const size_t extensionIndex = resource.find_last_of('.');
-			const size_t lastSegmentStartIndex = resource.find_last_of(segmentDivider);
-			
-			if (extensionIndex == resource.npos)
-			{
-				return resource.substr(lastSegmentStartIndex);
-			}
-			else
-			{
-				const size_t prevLastSegmentStartIndex = resource.find_last_of(segmentDivider, lastSegmentStartIndex - 1);
-				return resource.substr(prevLastSegmentStartIndex, lastSegmentStartIndex - prevLastSegmentStartIndex);
-			}
-		}
+		Resource getResourceWithoutFile(const Resource& resource) const;
+		void appendResourceRights(const Resource& resource, std::initializer_list<Method>&& methods);
 
 	public:
 		bool hasAccess(const Resource& resource, const Method method) const
 		{
 			const Resource& withoutFile { this->getResourceWithoutFile(resource) };
-			const Resources::const_iterator itResource = _resourceAccessRights.find(withoutFile);
+			const ResourcesMethods::const_iterator itResource = _resourceAccessRights.find(withoutFile);
 			return itResource != _resourceAccessRights.end() && itResource->second.containsMethod(method);
 		}
 
 	private:
-		Resources _resourceAccessRights;
+		ResourcesMethods _resourceAccessRights;
 
 	};
 }

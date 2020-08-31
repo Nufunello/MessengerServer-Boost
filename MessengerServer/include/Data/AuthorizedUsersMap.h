@@ -2,6 +2,7 @@
 
 #include "Data/AccessRights.h"
 #include "Exceptions/UsernameAlreadyInUseException.h"
+#include "Exceptions/NotAuthorizedException.h"
 
 #include <set>
 
@@ -25,7 +26,8 @@ namespace Data
         using StringGenerator = boost::uuids::string_generator;
         using RandomGenerator = boost::uuids::random_generator;
         using UserToken = boost::uuids::uuid;
-        using AccessRightsMap = std::map<UserToken, AccessRights>;
+        using UsersSet = std::set<UserName>;
+        using AccessRightsMap = std::map<UserToken, std::pair<AccessRights, UsersSet::const_iterator>>;
 
     public:
         AuthorizedUsersMap();
@@ -39,12 +41,6 @@ namespace Data
         
         const AccessRights& getAccessRights(const TokenView& token) const;
 
-    private:
-        bool isUserWithNameAuthorized(const UserName& username) const
-        {
-            return _usersAuthorized.find(username) != _usersAuthorized.end();
-        }
-
     public:
         bool isUserWithTokenViewAuthorized(const TokenView& token) const
         {
@@ -53,34 +49,19 @@ namespace Data
         }
 
     private:
-        Token addUser(UserName&& username)
-        {
-            _usersAuthorized.emplace(std::move(username));
-            const AccessRightsMap::const_iterator it = _accessRights.emplace(_randomGenerator(), _authorizedAccessRights).first;
-            return boost::uuids::to_string(it->first);
-        }
+        Token addUser(const UsersSet::const_iterator& itUser, UserName&& username);
 
     public:
-        Token addUser(const UserNameView& username)
-        {
-            UserName user = username.to_string();
+        Token addUser(const UserNameView& username);
 
-            if (this->isUserWithNameAuthorized(user))
-            {
-                throw Exceptions::UsernameAlreadyInUseException();
-            }
-            else
-            {
-                return this->addUser(std::move(user));
-            }
-        }
+        AccessRights deleteUser(const TokenView& token);
 
     private:
         const AccessRights _unauthorizedAccessRights;
         const AccessRights _authorizedAccessRights;
 
-        AccessRightsMap    _accessRights;
-        std::set<UserName> _usersAuthorized;
+        AccessRightsMap _accessRights;
+        UsersSet        _usersAuthorized;
 
         StringGenerator _stringGenerator;
         RandomGenerator _randomGenerator;
