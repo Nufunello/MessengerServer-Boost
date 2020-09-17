@@ -12,7 +12,7 @@ namespace Handlers
 {
     class ChatHandler
         : public AStrictedHandler
-        , public WebPageLoader
+        , private WebPageLoader
     {
     public:
         ChatHandler(AuthorizhedUsers& authorizedUsers)

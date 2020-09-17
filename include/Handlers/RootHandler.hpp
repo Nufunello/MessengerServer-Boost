@@ -11,7 +11,7 @@ namespace Handlers
 {
     class RootHandler
         : public AHandler
-        , public WebPageLoader
+        , private WebPageLoader
     {
     public:
         RootHandler()

@@ -17,12 +17,16 @@ namespace Users
             {}
             
         public:
-            void addMethods(std::initializer_list<MethodWithPointer> list)
+            void addMethods(std::initializer_list<HTTP::Requests::Method> list)
             {
                 for (auto& method : list)
                 {
-                    _methods.emplace(std::move(method));
+                    _methods.emplace(method);
                 }
+            }
+            void addMethods(Methods&& methods)
+            {
+                this->_methods.merge(std::move(methods._methods));
             }
         
         public:

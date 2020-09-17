@@ -6,43 +6,43 @@
 
 #include <map>
 
-namespace std
-{
-    template<>
-    struct less<std::string_view>
-    {
-        using is_transparent = void; // Enable comparison with the view
-    
-        template<class T>
-        bool operator ()(std::string const& lhs, T&& rhs) const {
-            return lhs < rhs;
-        }
-        
-        template<class T>
-        bool operator ()(T&& lhs, std::string const& rhs,
-            typename std::enable_if<!std::is_same_v<std::string,
-                typename std::decay<T>::type>>::type* = nullptr) const {
-            return lhs < rhs;
-        }
-    }
-};
+#include <boost/filesystem.hpp>
 
 namespace Handlers
 {
     class WebPageLoader
     {
     public:
-        using Map = std::map<std::string_view, std::string>;
+        using Map = std::map<std::string, std::string, std::less<>>;
+
+    private:
+        static Map readDir(const std::string_view relativePath)
+        {
+            const boost::filesystem::path dirPath = boost::filesystem::current_path().append(relativePath);
+
+            Map map;
+            for(auto & file : boost::filesystem::directory_iterator(dirPath))
+            {
+                const auto& path = file.path();
+                if (boost::filesystem::is_regular_file(path))
+                {
+                    std::string filename = path.filename().generic_string();
+                    const auto it = map.emplace(std::move(filename), std::string{}).first;
+                    boost::filesystem::load_string_file(path, it->second);
+                }
+            }
+            return map;
+        }
 
     public:
         WebPageLoader(const std::string_view webPagesDir)
-            : _webPages{{"index.html", "IndexPage"}}
+            : _webPages{readDir(webPagesDir)}
         {}
 
         virtual ~WebPageLoader() = default;
 
     public:
-        HTTP::Responses::HTTPResponse::Ptr getResponseWithPage(HTTP::Requests::Request&& request, const std::string_view page) const
+        HTTP::Responses::HTTPResponse::Ptr getResponseWithPage(HTTP::Requests::Request&& request, const boost::string_view page) const
         {
             const auto itWebPage = _webPages.find(page.empty() ? "index.html" : page);
             if (itWebPage == std::end(_webPages))

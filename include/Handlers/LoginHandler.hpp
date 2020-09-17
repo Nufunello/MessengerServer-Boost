@@ -12,7 +12,7 @@ namespace Handlers
 {
     class LoginHandler
         : public AStrictedHandler
-        , public WebPageLoader
+        , private WebPageLoader
     {
     public:
         LoginHandler(AuthorizhedUsers& authorizedUsers)

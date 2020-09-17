@@ -1,9 +1,12 @@
 #pragma once
 
 #include "Users/AccessRights/Methods.hpp"
+#include "URI/URIIterator.hpp"
 
 #include <string>
 #include <set>
+
+#include <boost/utility/string_view.hpp>
 
 namespace Users
 {
@@ -12,23 +15,18 @@ namespace Users
         class AccessRightsNode
         {
         private:
-            struct Comparator
+            AccessRightsNode() 
+                : _allowedMethods{{}}
+            {}
+
+            AccessRightsNode& operator=(AccessRightsNode&& accessRightsNode)
             {
-                using is_transparent = void;
-                
-                bool operator()(const std::string& lhs, const std::string& rhs) const
-                {
-                    return lhs < rhs;
-                }
-                bool operator()(std::string_view lhs, const std::string& rhs) const
-                {
-                    return lhs < rhs;
-                }
-                bool operator()(const std::string& lhs, std::string_view rhs) const
-                {
-                    return lhs < rhs;
-                }
-            };
+                this->_name = accessRightsNode._name;
+                this->_children = std::move(accessRightsNode._children);
+                this->_allowedMethods = std::move(accessRightsNode._allowedMethods);
+
+                return *this;
+            } 
 
         public:
             AccessRightsNode(std::string name, Users::AccessRights::Methods allowedMethods)
@@ -36,22 +34,59 @@ namespace Users
                 , _allowedMethods{std::move(allowedMethods)}
             {}
 
-            ~AccessRightsNode()
-            {}
+            AccessRightsNode(AccessRightsNode&&) = default;
+
+            ~AccessRightsNode() = default;
+
+        private:
+            void emplace(const boost::string_view name, Users::AccessRights::Methods allowedMethods = {})
+            {
+                auto it = _children.emplace(name.to_string(), AccessRightsNode()).first;
+                it->second = AccessRightsNode(it->first, std::move(allowedMethods));
+            }
 
         public:
-            const AccessRightsNode* next(const std::string_view nextNodeName) const
+            void appendAccessRightNode(const boost::string_view fullPath, Users::AccessRights::Methods allowedMethods)
+            {
+                URI::URIIterator uriIterator{fullPath, false};
+                URI::Segment name{uriIterator.next()};
+
+                AccessRightsNode* prevAccessRightsNode = this;
+                AccessRightsNode* currentAccessRightsNode = this->next(name);
+
+                while(uriIterator.hasNext() && currentAccessRightsNode != nullptr)
+                {
+                    name = uriIterator.next();
+                    prevAccessRightsNode = currentAccessRightsNode;
+                    currentAccessRightsNode = this->next(name);
+                }
+
+                if (currentAccessRightsNode != nullptr)
+                {
+                    currentAccessRightsNode->emplace(name, std::move(allowedMethods));
+                }
+                else
+                {
+                    while (uriIterator.hasNext())
+                    {
+                        prevAccessRightsNode->emplace(name);
+                        name = uriIterator.next();
+                    }
+                    prevAccessRightsNode->emplace(name, std::move(allowedMethods));
+                }
+            }
+
+            AccessRightsNode* next(const boost::string_view nextNodeName)
             {
                 const auto itChild = _children.find(nextNodeName);
-                return itChild == std::end(_children)
-                    ? nullptr : &*itChild;
+                return itChild == std::end(_children) ? nullptr : &itChild->second;
             }
 
         private:
-            const std::string _name;
+            boost::string_view     _name;
             Users::AccessRights::Methods _allowedMethods;
 
-            std::set<AccessRightsNode, Comparator> _children;
+            std::map<std::string, AccessRightsNode, std::less<>> _children;
 
         };
         

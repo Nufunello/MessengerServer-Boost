@@ -70,6 +70,19 @@
         "bit": "cpp",
         "compare": "cpp",
         "concepts": "cpp",
-        "stop_token": "cpp"
-    }
+        "stop_token": "cpp",
+        "strstream": "cpp",
+        "coroutine": "cpp",
+        "forward_list": "cpp",
+        "regex": "cpp",
+        "scoped_allocator": "cpp",
+        "shared_mutex": "cpp",
+        "cfenv": "cpp",
+        "valarray": "cpp",
+        "csetjmp": "cpp",
+        "slist": "cpp",
+        "span": "cpp",
+        "rope": "cpp"
+    },
+    "git.ignoreLimitWarning": true
 }

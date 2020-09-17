@@ -9,14 +9,14 @@
 				"-g",
 				"-std=gnu++2a",
 				"-I",
-				"${workspaceFolder}/include",
+                "/usr/include/boost_1.74",
 				"-I",
-                "/home/nufunello/c++/boost_1_74_0/",
+				"${workspaceFolder}/include",
 				"${workspaceFolder}/main.cpp",
 				"-o",
-				"${workspaceFolder}/main",
+				"${workspaceFolder}/Run/server",
 				"-L",
-                "/home/nufunello/c++/boost_1_74_0/stage/lib/",
+                "${workspaceFolder}/Libs",
                 "-lboost_system",
                 "-lboost_filesystem",
                 "-lboost_thread",
@@ -28,7 +28,27 @@
 			"problemMatcher": [
 				"$gcc"
 			],
-			"group": "build"
+			"group": "build",
+			"dependsOn":[
+				"Copy webpages"
+			]
+		},
+		{
+			"type": "shell",
+			"label": "Create Run dir",
+			"command": "mkdir -p ${workspaceFolder}/Run"
+		},
+		{
+			"type": "shell",
+			"label": "Copy webpages",
+			"command": "cp",
+			"args": [
+				"-r", "${workspaceFolder}/webpages",
+				"${workspaceFolder}/Run/webpages"
+			],
+			"dependsOn": [
+				"Create Run dir"
+			]
 		}
 	]
 }

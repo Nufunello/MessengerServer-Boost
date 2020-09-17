@@ -2,8 +2,6 @@
 
 #include "HTTP/Responses/HTTPResponse.hpp"
 
-#include <boost/beast/http/empty_body.hpp>
-
 namespace HTTP
 {
     namespace Responses

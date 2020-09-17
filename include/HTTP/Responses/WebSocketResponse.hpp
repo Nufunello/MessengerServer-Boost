@@ -2,8 +2,6 @@
 
 #include "HTTP/Responses/IResponse.hpp"
 
-#include <boost/beast.hpp>
-
 namespace HTTP
 {
     namespace Responses

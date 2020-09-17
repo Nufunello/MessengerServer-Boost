@@ -10,7 +10,7 @@ namespace Factories
         : public AHandlerFactory
     {
     public:
-        using Map = boost::container::flat_map<std::string_view, Factories::AHandlerFactory::Ptr>;
+        using Map = boost::container::flat_map<boost::string_view, Factories::AHandlerFactory::Ptr>;
 
     private:
         static void emplaceInMap(Map& map)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string_view>
+#include <boost/utility/string_view.hpp>
 #include <algorithm>
 
 namespace URI
@@ -11,11 +11,18 @@ namespace URI
     class Segment
     {
     public:
-        inline Segment(std::string_view segment) :
+        inline Segment(boost::string_view segment) :
         _segment{segment}
         {}
 
         inline ~Segment() = default;
+
+    public:
+        inline Segment& operator=(const Segment& segment)
+        {
+            this->_segment = segment._segment;
+            return *this;
+        }
 
     public:
         inline bool isEmpty() const
@@ -25,18 +32,19 @@ namespace URI
 
         inline bool isFile() const
         {
-            const std::string_view::const_reverse_iterator end = _segment.rend();
-            const std::string_view::const_reverse_iterator it = std::find_if(_segment.rbegin(), end, [](const char symbol){ return symbol == SEGMENT_DIVIDER || symbol == FILE_EXTENSION; });
+            if (isEmpty()) return false;
+            const boost::string_view::const_reverse_iterator end = _segment.rend();
+            const boost::string_view::const_reverse_iterator it = std::find_if(_segment.rbegin(), end, [](const char symbol){ return symbol == SEGMENT_DIVIDER || symbol == FILE_EXTENSION; });
             return it != end && *it == FILE_EXTENSION;
         }
 
-        inline operator std::string_view() const
+        inline operator boost::string_view() const
         {
             return _segment;
         }
 
     private:
-        const std::string_view _segment;
+        boost::string_view _segment;
 
     };
 };
