@@ -9,6 +9,8 @@
 
 #include <boost/asio/io_service.hpp>
 
+const Users::AccessRights::Methods Users::AccessRights::AccessRightsNode::sEmptyMethods = Users::AccessRights::Methods{};
+
 void proccessRequest(HTTP::Requests::Request&& request, Factories::RootFactory& rootFactory)
 {
     if (!request.isValid())
@@ -45,6 +47,7 @@ void acceptRequest(boost::asio::io_service& service, boost::asio::ip::tcp::accep
 
 int main(int argc, char** argv)
 {
+    const Users::AccessRights::Methods methd = rootNode.getAllowedMethods("/");
     try
 	{
 		const std::string ip = argv[1];

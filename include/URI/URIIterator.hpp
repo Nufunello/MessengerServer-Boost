@@ -12,16 +12,21 @@ namespace URI
         {
             if (!includeFile)
             {
-                auto itEnd = _uri.rend();
-                const auto pos = _uri.find_last_of(FILE_EXTENSION);
-                if (pos != _uri.npos)
-                {
-                    _uri = _uri.substr(0, _uri.find_last_of(SEGMENT_DIVIDER, pos));
-                }
+                removeFileFromURI();
             }
         }
 
         inline ~URIIterator() = default;
+
+    private:
+        void removeFileFromURI()
+        {
+            const auto pos = _uri.find_last_of(FILE_EXTENSION);
+            if (pos != _uri.npos)
+            {
+                _uri = _uri.substr(0, _uri.find_last_of(SEGMENT_DIVIDER, pos));
+            }
+        }
 
     public:
         inline bool isLast() const

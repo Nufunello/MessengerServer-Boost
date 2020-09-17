@@ -15,6 +15,9 @@ namespace Users
         class AccessRightsNode
         {
         private:
+            static const Methods sEmptyMethods;
+
+        private:
             AccessRightsNode() 
                 : _allowedMethods{{}}
             {}
@@ -26,10 +29,10 @@ namespace Users
                 this->_allowedMethods = std::move(accessRightsNode._allowedMethods);
 
                 return *this;
-            } 
+            }
 
         public:
-            AccessRightsNode(std::string name, Users::AccessRights::Methods allowedMethods)
+            AccessRightsNode(std::string name, Methods allowedMethods)
                 : _name{std::move(name)}
                 , _allowedMethods{std::move(allowedMethods)}
             {}
@@ -43,6 +46,18 @@ namespace Users
             {
                 auto it = _children.emplace(name.to_string(), AccessRightsNode()).first;
                 it->second = AccessRightsNode(it->first, std::move(allowedMethods));
+            }
+
+            AccessRightsNode* next(const boost::string_view nextNodeName)
+            {
+                const auto itChild = _children.find(nextNodeName);
+                return itChild == std::end(_children) ? nullptr : &itChild->second;
+            }
+
+            const AccessRightsNode* next(const boost::string_view nextNodeName) const
+            {
+                const auto itChild = _children.find(nextNodeName);
+                return itChild == std::end(_children) ? nullptr : &itChild->second;
             }
 
         public:
@@ -63,7 +78,7 @@ namespace Users
 
                 if (currentAccessRightsNode != nullptr)
                 {
-                    currentAccessRightsNode->emplace(name, std::move(allowedMethods));
+                    currentAccessRightsNode->_allowedMethods.addMethods(std::move(allowedMethods));
                 }
                 else
                 {
@@ -76,14 +91,25 @@ namespace Users
                 }
             }
 
-            AccessRightsNode* next(const boost::string_view nextNodeName)
+        const Users::AccessRights::Methods& getAllowedMethods(const boost::string_view fullPath) const
+        {
+            URI::URIIterator uriIterator{fullPath, false};
+            const AccessRightsNode* currentAccessRightsNode = this;
+
+            while(uriIterator.hasNext())
             {
-                const auto itChild = _children.find(nextNodeName);
-                return itChild == std::end(_children) ? nullptr : &itChild->second;
+                currentAccessRightsNode = currentAccessRightsNode->next(uriIterator.next());
+                if (currentAccessRightsNode == nullptr)
+                {
+                    return sEmptyMethods;
+                }
             }
 
+            return currentAccessRightsNode->_allowedMethods;
+        }
+
         private:
-            boost::string_view     _name;
+            boost::string_view           _name;
             Users::AccessRights::Methods _allowedMethods;
 
             std::map<std::string, AccessRightsNode, std::less<>> _children;
