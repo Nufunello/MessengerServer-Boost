@@ -1,0 +1,94 @@
+#pragma once
+
+#include "Handlers/AStrictedHandler.hpp"
+#include "Handlers/WebPageLoader.hpp"
+
+#include "HTTP/Responses/UnauthorizedResponse.hpp"
+#include "HTTP/Responses/UserAlreadyAuthorizedResponse.hpp"
+
+#include "Users/Data/UsersData.hpp"
+
+namespace Handlers
+{
+    class LoginHandler
+        : public AStrictedHandler
+        , private WebPageLoader
+    {
+    private:
+        static constexpr char AUTHORIZATION_FIELD_NAME[] = "Authorization";
+
+    public:
+        LoginHandler(Users::Data::UsersData& usersData)
+            : WebPageLoader{"/webpages/login"}
+            , _usersData{usersData}
+        {}
+
+        ~LoginHandler() = default;
+
+    protected:
+        HTTP::Responses::IResponse::Ptr doGet(HTTP::Requests::Request&& request, URI::Segment target) override
+        {
+            return WebPageLoader::getResponseWithPage(std::move(request), target);
+        }
+
+        HTTP::Responses::IResponse::Ptr doPost(HTTP::Requests::Request&& request, URI::Segment target) override
+        {
+            const HTTP::Requests::Message& message = request.message();
+            const HTTP::Requests::Message::const_iterator itName = message.find(AUTHORIZATION_FIELD_NAME);
+
+            if (itName == std::end(message))
+            {
+                return std::make_unique<HTTP::Responses::HTTPResponse>(std::move(request), HTTP::Responses::Status::bad_request, "Authorization required");
+            }
+
+            using namespace Users::Data;
+            UsersData::LoginStatus status;
+            std::string token = _usersData.addUser(itName->value(), status);
+            switch(status)
+            {
+                case UsersData::LoginStatus::OK:
+                {
+                    HTTP::Responses::Response response;
+                    response.result(HTTP::Responses::Status::ok);
+                    response.reason("OK");
+                    response.insert(HTTP::Requests::Field::set_cookie, token);
+                    return std::make_unique<HTTP::Responses::HTTPResponse>(std::move(request), std::move(response));
+                }
+
+                case UsersData::LoginStatus::UsernameAlredyInUse:
+                {
+                    return std::make_unique<HTTP::Responses::HTTPResponse>(std::move(request), HTTP::Responses::Status::bad_request, "Username is already in use");
+                }
+
+                default:
+                {
+                    return std::make_unique<HTTP::Responses::BadRequestResponse>(std::move(request));
+                }
+            }
+
+            return WebPageLoader::getResponseWithPage(std::move(request), target);
+        }
+
+    protected:
+        virtual HTTP::Responses::IResponse::Ptr findAppropiateResponse(HTTP::Requests::Request&& request, const HTTP::Requests::Method method) override
+        {
+            switch (method)
+            {
+            case HTTP::Requests::Method::post:
+            case HTTP::Requests::Method::get:
+                return std::make_unique<HTTP::Responses::UserAlreadyAuthorizedResponse>(std::move(request));
+
+            case HTTP::Requests::Method::delete_:
+                return std::make_unique<HTTP::Responses::UnauthorizedResponse>(std::move(request));
+            
+            default:
+                return AStrictedHandler::findAppropiateResponse(std::move(request), method);
+            }
+        }
+
+    private:
+        Users::Data::UsersData& _usersData;
+        
+    };
+    
+};

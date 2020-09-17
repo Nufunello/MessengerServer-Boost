@@ -1,49 +1,55 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "type": "shell",
-            "label": "Build",
-            "command": "/usr/bin/g++",
-            "args": [
-                "-g",
-                "-std=c++17",
-                "-Wall",
-                "-I",
-                "${workspaceFolder}/MessengerServer/include/",
-                "-I",
-                "/home/nufunello/c++/boost_1_74_0/",
-                "${workspaceFolder}/MessengerServer/src/*.cpp",
-                "${workspaceFolder}/MessengerServer/src/Handlers/*.cpp",
-                "${workspaceFolder}/MessengerServer/src/Data/*.cpp",
-                "-o",
-                "${workspaceFolder}/Run/MessengerServer.out",
-                "-L",
-                "/home/nufunello/c++/boost_1_74_0/stage/lib/",
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "C/C++: g++ build active file",
+			"command": "/usr/bin/g++-10",
+			"args": [
+				"-g",
+				"-std=gnu++2a",
+				"-Wall",
+				"-I",
+                "/usr/include/boost_1.74",
+				"-I",
+				"${workspaceFolder}/include",
+				"${workspaceFolder}/main.cpp",
+				"-o",
+				"${workspaceFolder}/Run/server",
+				"-L",
+                "${workspaceFolder}/Libs",
                 "-lboost_system",
                 "-lboost_filesystem",
                 "-lboost_thread",
                 "-lpthread"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": "build",
-            "dependsOn": ["Copy webpages"]
-        },
-
-        {
-            "type": "shell",
-            "label": "Copy webpages",
-            "command": "cp",
-            "args": [
-                "${workspaceFolder}/MessengerServer/webpages/",
-                "-r",
-                "${workspaceFolder}/Run/"
-            ]
-        }
-    ]
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build",
+			"dependsOn":[
+				"Copy webpages"
+			]
+		},
+		{
+			"type": "shell",
+			"label": "Create Run dir",
+			"command": "mkdir -p ${workspaceFolder}/Run"
+		},
+		{
+			"type": "shell",
+			"label": "Copy webpages",
+			"command": "cp",
+			"args": [
+				"-r", "${workspaceFolder}/webpages",
+				"${workspaceFolder}/Run/webpages"
+			],
+			"dependsOn": [
+				"Create Run dir"
+			]
+		}
+	]
 }
