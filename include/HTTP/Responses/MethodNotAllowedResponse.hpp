@@ -11,7 +11,7 @@ namespace HTTP
         {
         public:
             MethodNotAllowedResponse(boost::asio::ip::tcp::socket&& socket)
-                : HTTPResponse{std::move(socket), boost::beast::http::status::method_not_allowed, "Method not allowed"}
+                : HTTPResponse{std::move(socket), Status::method_not_allowed, "Method not allowed"}
             {}
 
             ~MethodNotAllowedResponse() = default;

@@ -36,10 +36,11 @@ namespace Users
                 : _name{std::move(name)}
                 , _allowedMethods{std::move(allowedMethods)}
             {}
+            
+            AccessRightsNode(const AccessRightsNode&) = default;
+            AccessRightsNode(AccessRightsNode&&)      = default;
 
-            AccessRightsNode(AccessRightsNode&&) = default;
-
-            ~AccessRightsNode() = default;
+            virtual ~AccessRightsNode() = default;
 
         private:
             void emplace(const boost::string_view name, Users::AccessRights::Methods allowedMethods = {})

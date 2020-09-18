@@ -15,7 +15,7 @@ namespace Handlers
     {
     public:
         RootHandler()
-            : WebPageLoader{""}
+            : WebPageLoader{"/webpages/"}
         {}
 
         ~RootHandler() = default;
@@ -25,7 +25,5 @@ namespace Handlers
         {
             return WebPageLoader::getResponseWithPage(std::move(request), target);
         }
-        
     };
-    
 };

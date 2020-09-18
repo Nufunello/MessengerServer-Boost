@@ -10,9 +10,9 @@ namespace HTTP
             : public HTTPResponse
         {
         protected:
-            inline static boost::beast::http::response<boost::beast::http::string_body> makeResponse(std::string body)
+            inline static Response makeResponse(std::string body)
             {
-                auto response = HTTPResponse::makeResponse(boost::beast::http::status::ok, "OK");
+                auto response = HTTPResponse::makeResponse(Status::ok, "OK");
                 response.body() = std::move(body);
                 return response;
             }

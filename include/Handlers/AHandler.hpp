@@ -53,7 +53,7 @@ namespace Handlers
     public:
         virtual HTTP::Responses::IResponse::Ptr doRequest(HTTP::Requests::Request&& request, URI::Segment target, const Users::AccessRights::Methods& methodsAllowed)
         {
-            switch (request.getMethod())
+            switch (request.message().method())
             {
             case HTTP::Requests::Method::get:
                 return this->doGet(std::move(request), target);

@@ -9,8 +9,8 @@ namespace Factories
         : public AHandlerFactory
     {
     public:
-        LoginFactory(AuthorizhedUsers& authorizedUsers)
-            : _loginHandler{authorizedUsers}
+        LoginFactory(Users::Data::UsersData& usersData)
+            : _loginHandler{usersData}
         {
             AHandlerFactory::setHandler(&_loginHandler);
         }

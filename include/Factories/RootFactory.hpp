@@ -12,10 +12,10 @@ namespace Factories
         : public AMappedHandlerFactory
     {
     public:
-        RootFactory(AuthorizhedUsers& authorizedUsers)
+        RootFactory(Users::Data::UsersData& usersData)
             : AMappedHandlerFactory{
-                    "login", std::make_unique<LoginFactory>(authorizedUsers),
-                    "chat", std::make_unique<ChatFactory>(authorizedUsers)
+                    "login", std::make_unique<LoginFactory>(usersData),
+                    "chat", std::make_unique<ChatFactory>(usersData)
             }
         {
             AHandlerFactory::setHandler(&_rootHandler);

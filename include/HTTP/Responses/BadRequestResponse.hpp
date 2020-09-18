@@ -11,7 +11,7 @@ namespace HTTP
         {
         public:
             BadRequestResponse(boost::asio::ip::tcp::socket&& socket)
-                : HTTPResponse{std::move(socket), boost::beast::http::status::bad_request, "Bad request"}
+                : HTTPResponse{std::move(socket), Status::bad_request, "Bad request"}
             {}
 
             ~BadRequestResponse() = default;

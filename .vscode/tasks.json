@@ -8,6 +8,7 @@
 			"args": [
 				"-g",
 				"-std=gnu++2a",
+				"-Wall",
 				"-I",
                 "/usr/include/boost_1.74",
 				"-I",

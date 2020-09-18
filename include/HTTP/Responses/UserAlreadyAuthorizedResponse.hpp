@@ -11,7 +11,7 @@ namespace HTTP
         {
         public:
             UserAlreadyAuthorizedResponse(boost::asio::ip::tcp::socket&& socket)
-                : HTTPResponse{std::move(socket), boost::beast::http::status::bad_request, "User is alredy authorized"}
+                : HTTPResponse{std::move(socket), Status::bad_request, "User is alredy authorized"}
             {}
 
             ~UserAlreadyAuthorizedResponse() = default;

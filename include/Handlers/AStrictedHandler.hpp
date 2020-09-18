@@ -24,7 +24,7 @@ namespace Handlers
     public:
         virtual HTTP::Responses::IResponse::Ptr doRequest(HTTP::Requests::Request&& request, URI::Segment target, const Users::AccessRights::Methods& methodsAllowed) override
         {
-            const HTTP::Requests::Method method = request.getMethod();
+            const HTTP::Requests::Method method = request.message().method();
             auto methodPointer = methodsAllowed.getMethodPointer(method);
             return (methodPointer == nullptr) ? this->findAppropiateResponse(std::move(request), method) : (this->*methodPointer)(std::move(request), target);
         }

@@ -11,7 +11,7 @@ namespace HTTP
         {
         public:
             ResourceNotFoundResponse(boost::asio::ip::tcp::socket&& socket)
-                : HTTPResponse{std::move(socket), boost::beast::http::status::not_found, "Resource not found"}
+                : HTTPResponse{std::move(socket), Status::not_found, "Resource not found"}
             {}
 
             ~ResourceNotFoundResponse() = default;

@@ -11,7 +11,7 @@ namespace HTTP
         {
         public:
             UnauthorizedResponse(boost::asio::ip::tcp::socket&& socket)
-                : HTTPResponse{std::move(socket), boost::beast::http::status::bad_request, "User is not authorized"}
+                : HTTPResponse{std::move(socket), Status::bad_request, "User is not authorized"}
             {}
 
             ~UnauthorizedResponse() = default;

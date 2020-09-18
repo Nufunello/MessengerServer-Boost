@@ -49,10 +49,14 @@ namespace Factories
             if (iterator.hasNext())
             {
                 URI::Segment segment = iterator.next();
-                if (iterator.isLast() && !segment.isFile())
+                if (!segment.isFile())
                 {
                     const auto handlerFactory = findFactory(segment);
                     return handlerFactory ? handlerFactory->getHandler(iterator) : nullptr;
+                }
+                else
+                {
+                    iterator = URI::URIIterator(segment);
                 }
             }
             return AHandlerFactory::getHandler(iterator);

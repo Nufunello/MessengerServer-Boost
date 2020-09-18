@@ -15,9 +15,9 @@ namespace Handlers
         , private WebPageLoader
     {
     public:
-        ChatHandler(AuthorizhedUsers& authorizedUsers)
-            : _authorizedUsers{authorizedUsers}
-            , WebPageLoader{"/webpages/chat"}
+        ChatHandler(Users::Data::UsersData& usersData)
+            : WebPageLoader{"/webpages/chat"}
+            , _usersData{usersData}
         {}
 
         ~ChatHandler() = default;
@@ -43,7 +43,7 @@ namespace Handlers
         }
 
     private:
-        AuthorizhedUsers& _authorizedUsers;
+        Users::Data::UsersData& _usersData;
         
     };
     

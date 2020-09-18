@@ -9,7 +9,7 @@ namespace Factories
         : public AHandlerFactory
     {
     public:
-        ChatFactory(AuthorizhedUsers& authorizedUsers)
+        ChatFactory(Users::Data::UsersData& authorizedUsers)
             : _chatHandler{authorizedUsers}
         {
             AHandlerFactory::setHandler(&_chatHandler);
