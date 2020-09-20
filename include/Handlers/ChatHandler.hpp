@@ -3,10 +3,8 @@
 #include "Handlers/AStrictedHandler.hpp"
 #include "Handlers/WebPageLoader.hpp"
 
-#include "HTTP/Responses/UserAlreadyAuthorizedResponse.hpp"
 #include "HTTP/Responses/UnauthorizedResponse.hpp"
-
-using AuthorizhedUsers = int;
+#include "HTTP/Responses/WebSocketResponse.hpp"
 
 namespace Handlers
 {
@@ -26,6 +24,13 @@ namespace Handlers
         HTTP::Responses::IResponse::Ptr doGet(HTTP::Requests::Request&& request, URI::Segment target) override
         {
             return WebPageLoader::getResponseWithPage(std::move(request), target);
+        }
+
+        HTTP::Responses::IResponse::Ptr doPost(HTTP::Requests::Request&& request, URI::Segment target) override
+        {
+            boost::beast::websocket::stream<boost::beast::tcp_stream> websocket{std::move(request)};
+            //websocket.async_read()
+            return std::make_unique<HTTP::Responses::WebSocketResponse>(websocket);
         }
 
     protected:

@@ -17,7 +17,7 @@ namespace HTTP
             using Ptr = std::unique_ptr<HTTPResponse>;
 
         protected:
-            inline static Response makeResponse(const Status status, const std::string& reason)
+            inline static Response makeResponse(const Status status, const boost::string_view reason)
             {
                 Response response;
                 response.result(status);
@@ -31,7 +31,7 @@ namespace HTTP
             {}
 
         public:
-            inline HTTPResponse(boost::asio::ip::tcp::socket&& socket, const Status status, const std::string& reason)
+            inline HTTPResponse(boost::asio::ip::tcp::socket&& socket, const Status status, const boost::string_view reason)
                 : _socket{std::move(socket)}
                 , _response{this->makeResponse(status, reason)}
             {}

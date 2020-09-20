@@ -3,6 +3,7 @@
 #include "Handlers/AStrictedHandler.hpp"
 #include "Handlers/WebPageLoader.hpp"
 
+#include "HTTP/Responses/OKResponse.hpp"
 #include "HTTP/Responses/UnauthorizedResponse.hpp"
 #include "HTTP/Responses/UserAlreadyAuthorizedResponse.hpp"
 
@@ -15,7 +16,7 @@ namespace Handlers
         , private WebPageLoader
     {
     private:
-        static constexpr char AUTHORIZATION_FIELD_NAME[] = "Authorization";
+        static constexpr HTTP::Requests::Field TOKEN_FIELD = HTTP::Requests::Field::cookie;
 
     public:
         LoginHandler(Users::Data::UsersData& usersData)
@@ -34,7 +35,7 @@ namespace Handlers
         HTTP::Responses::IResponse::Ptr doPost(HTTP::Requests::Request&& request, URI::Segment target) override
         {
             const HTTP::Requests::Message& message = request.message();
-            const HTTP::Requests::Message::const_iterator itName = message.find(AUTHORIZATION_FIELD_NAME);
+            const HTTP::Requests::Message::const_iterator itName = message.find(HTTP::Requests::Field::authorization);
 
             if (itName == std::end(message))
             {
@@ -42,8 +43,10 @@ namespace Handlers
             }
 
             using namespace Users::Data;
+            
             UsersData::LoginStatus status;
             std::string token = _usersData.addUser(itName->value(), status);
+
             switch(status)
             {
                 case UsersData::LoginStatus::OK:
@@ -67,6 +70,38 @@ namespace Handlers
             }
 
             return WebPageLoader::getResponseWithPage(std::move(request), target);
+        }
+
+        HTTP::Responses::IResponse::Ptr doDelete(HTTP::Requests::Request&& request, URI::Segment target) override
+        {
+            const HTTP::Requests::Message& message = request.message();
+            const HTTP::Requests::Message::const_iterator itToken = message.find(TOKEN_FIELD);
+
+            if (itToken == std::end(message))
+            {
+                return std::make_unique<HTTP::Responses::UnauthorizedResponse>(std::move(request));
+            }
+
+            using namespace Users::Data;
+            
+            UsersData::LogoutStatus status = _usersData.LogoutUser(itToken->value());
+
+            switch(status)
+            {
+                case UsersData::LogoutStatus::OK:
+                {
+                    HTTP::Responses::Response response;
+                    response.result(HTTP::Responses::Status::ok);
+                    response.reason("OK");
+                    response.insert(HTTP::Requests::Field::set_cookie, "");
+                    return std::make_unique<HTTP::Responses::HTTPResponse>(std::move(request), std::move(response));
+                }
+
+                default:
+                {
+                    return std::make_unique<HTTP::Responses::BadRequestResponse>(std::move(request));
+                }
+            }
         }
 
     protected:
