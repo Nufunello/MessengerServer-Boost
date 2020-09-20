@@ -10,6 +10,10 @@
 
 #include <boost/asio/io_service.hpp>
 
+namespace {
+    constexpr HTTP::Requests::Field TOKEN_FIELD = HTTP::Requests::Field::cookie;
+}
+
 const Users::AccessRights::Methods Users::AccessRights::AccessRightsNode::sEmptyMethods = Users::AccessRights::Methods{};
 
 template <typename Response>
@@ -23,13 +27,6 @@ void proccessRequest(HTTP::Requests::Request&& request, Factories::RootFactory& 
 {
     try
     {
-        if (!request.isValid())
-        {
-            std::string error = request.error();
-            sendResponse<HTTP::Responses::BadRequestResponse>(std::move(request));
-            return;
-        }
-
         const HTTP::Requests::Message& message = request.message();
         const boost::string_view target = message.target();
          
@@ -40,27 +37,24 @@ void proccessRequest(HTTP::Requests::Request&& request, Factories::RootFactory& 
 
         if (handler && !iterator.hasNext())
         {
-            const auto itCookie = message.find(HTTP::Requests::Field::cookie);
-            const Users::AccessRights::RootAccessRightsNode& accessRights = itCookie == std::end(message) 
+            const auto itToken = message.find(TOKEN_FIELD);
+            const Users::AccessRights::RootAccessRightsNode& accessRights = itToken == std::end(message) 
                                                                     ? usersData.getUnauthorizedAllowedMethods() 
-                                                                    : usersData.getUsersAllowedMethods(itCookie->value());
+                                                                    : usersData.getUsersAllowedMethods(itToken->value());
                                   
             const Users::AccessRights::Methods& allowedMethods = accessRights.getAllowedMethods(target); 
 
             HTTP::Responses::IResponse::Ptr pResponse = handler->doRequest(std::move(request), fileSegment, allowedMethods);
             pResponse->send();
-            return;
         }
         else
         {
             sendResponse<HTTP::Responses::ResourceNotFoundResponse>(std::move(request));
-            return;
         }
     }
     catch(const std::exception& e)
     {   
         sendResponse<HTTP::Responses::InternalServerErrorResponse>(std::move(request));
-        return;
     }
 }
 
@@ -68,7 +62,17 @@ void acceptRequest(boost::asio::io_service& service, boost::asio::ip::tcp::accep
 {
     boost::asio::ip::tcp::socket socket{service};
     acceptor.accept(socket);
-    proccessRequest(HTTP::Requests::Request{std::move(socket)}, rootFactory, usersData);
+    HTTP::Requests::Request request{std::move(socket)};
+
+    if (!request.isValid())
+    {
+        std::string error = request.error();
+        sendResponse<HTTP::Responses::BadRequestResponse>(std::move(request));
+    }
+    else
+    {
+        proccessRequest(std::move(request), rootFactory, usersData);
+    }
 }
 
 int main(int argc, char** argv)
@@ -96,6 +100,6 @@ int main(int argc, char** argv)
 	}
 	catch(const std::exception& e)
 	{
-		std::cerr << "Server failed due to " << e.what() << '\n';
+		std::cerr << "Server start failed due to " << e.what() << '\n';
 	}
 }

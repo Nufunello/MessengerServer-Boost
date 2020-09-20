@@ -1,17 +1,17 @@
 #pragma once
 
-#include "HTTP/Responses/HTTPResponse.hpp"
+#include "HTTP/Responses/RedirectResponse.hpp"
 
 namespace HTTP
 {
     namespace Responses
     {
         class UserAlreadyAuthorizedResponse
-            : public HTTPResponse
+            : public RedirectResponse
         {
         public:
             UserAlreadyAuthorizedResponse(boost::asio::ip::tcp::socket&& socket)
-                : HTTPResponse{std::move(socket), Status::bad_request, "User is alredy authorized"}
+                : RedirectResponse{std::move(socket), "/chat", "User is alredy authorized"}
             {}
 
             ~UserAlreadyAuthorizedResponse() = default;

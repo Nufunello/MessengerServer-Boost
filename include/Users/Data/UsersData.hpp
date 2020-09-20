@@ -24,6 +24,13 @@ namespace Users
                 NotOK
             };
 
+            enum class LogoutStatus
+            {
+                OK = 0,
+                TokenIsNotPresent,
+                NotOK
+            };
+
         private:
             using Token = boost::uuids::uuid; 
 
@@ -54,11 +61,50 @@ namespace Users
                 return generator.operator()();
             }
 
+        private:
+            std::string addUser(const std::set<std::string, std::less<>>::const_iterator itUser, const boost::string_view loginName, Token&& token)
+            {
+                auto itUserName = _usersNames.emplace_hint(itUser, loginName);
+                std::string tokenStr = boost::uuids::to_string(token);
+                _usersData.emplace(std::move(token), UserData{_defaultAuthorizedAllowedMethods, std::move(itUserName)});
+                return tokenStr;
+            }
+            
+            Token viewToToken(const boost::string_view strToken)
+            {
+                static boost::uuids::string_generator stringGenerator;
+                return stringGenerator.operator()(strToken.begin(), strToken.end());
+            }
+
         public:
+            LogoutStatus LogoutUser(const boost::string_view strToken)
+            {
+                try
+                {
+                    Token token = viewToToken(strToken);
+                    auto itUser = _usersData.find(token);
+
+                    if (itUser == std::end(_usersData))
+                    {
+                        return LogoutStatus::TokenIsNotPresent;
+                    }
+                    else
+                    {
+                        _usersNames.erase(itUser->second.ItUserName);
+                        _usersData.erase(itUser);
+                        return LogoutStatus::OK;
+                    }
+                }
+                catch(const std::exception& e)
+                {
+                    return LogoutStatus::NotOK;
+                }
+            }
+            
             std::string addUser(const boost::string_view loginName, LoginStatus& loginStatus)
             {
-                auto itUser = _userNames.find(loginName);
-                if (itUser != std::end(_userNames))
+                auto itUserName = _usersNames.find(loginName);
+                if (itUserName != std::end(_usersNames))
                 {
                     loginStatus = LoginStatus::UsernameAlredyInUse;
                     return std::string();
@@ -66,15 +112,8 @@ namespace Users
 
                 try
                 {
-                    auto itUserName = _userNames.emplace_hint(itUser, loginName);
-
-                    Token token = generateToken();
-                    std::string tokenStr = boost::uuids::to_string(token);
-
-                    _usersData.emplace(std::move(token), UserData{_defaultAuthorizedAllowedMethods, std::move(itUserName)});
                     loginStatus = LoginStatus::OK;
-
-                    return tokenStr;
+                    return addUser(itUserName, loginName, generateToken());
                 }
                 catch(const std::exception& e)
                 {
@@ -85,8 +124,7 @@ namespace Users
 
             const AccessRights::RootAccessRightsNode& getUsersAllowedMethods(const boost::string_view strToken)
             {
-                static boost::uuids::string_generator stringGenerator;
-                Token token = stringGenerator.operator()(strToken.begin(), strToken.end());
+                Token token = viewToToken(strToken);;
                 const auto itUser = _usersData.find(token);
                 return itUser == std::end(_usersData) ? _unauthorizedAllowedMethods : itUser->second.AccessRights;
             }
@@ -97,8 +135,8 @@ namespace Users
             } 
 
         private:
-            std::map<Token, UserData, std::less<>> _usersData;
-            std::set<std::string, std::less<>> _userNames;
+            std::map<Token, UserData> _usersData;
+            std::set<std::string, std::less<>> _usersNames;
 
             const AccessRights::RootAccessRightsNode _unauthorizedAllowedMethods;
             const AccessRights::RootAccessRightsNode _defaultAuthorizedAllowedMethods;

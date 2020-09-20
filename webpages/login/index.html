@@ -9,7 +9,10 @@
 			const url = 'http://127.0.0.1:8001/login';
 
 			Http.open("POST", url);
-			Http.setRequestHeader('Authorization', 'nufun');
+
+			let loginName = document.getElementById('loginInput').value;
+			console.log(loginName);
+			Http.setRequestHeader('Authorization', loginName);
 			Http.send();
 
 			Http.onload = function () {
