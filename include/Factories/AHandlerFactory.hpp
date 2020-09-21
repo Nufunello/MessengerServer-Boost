@@ -14,19 +14,19 @@ namespace Factories
         AHandlerFactory() = default;
 
     protected:
-        inline void setHandler(Handlers::AHandler::Ptr handler)
+        inline void setHandler(Handlers::AHandler* handler)
         {
             _handler = handler;
         }
 
     public:
-        virtual Handlers::AHandler::Ptr getHandler(URI::URIIterator& iterator) const
+        virtual Handlers::AHandler* getHandler(URI::URIIterator& iterator) const
         {
             return _handler;
         }
 
     private:
-        Handlers::AHandler::Ptr _handler;
+        Handlers::AHandler* _handler;
 
     };
 };

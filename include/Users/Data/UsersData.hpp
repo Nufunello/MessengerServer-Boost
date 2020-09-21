@@ -13,6 +13,7 @@ namespace Users
         constexpr std::initializer_list<Users::AccessRights::MethodWithPointer> UNAUTHUSER_LOGIN_METHODS{HTTP::Requests::Method::get, HTTP::Requests::Method::post};
         constexpr std::initializer_list<Users::AccessRights::MethodWithPointer> AUTH_USER_LOGIN_METHODS{HTTP::Requests::Method::delete_};
         constexpr std::initializer_list<Users::AccessRights::MethodWithPointer> AUTH_USER_CHAT_METHODS{HTTP::Requests::Method::get, HTTP::Requests::Method::post};
+        constexpr std::initializer_list<Users::AccessRights::MethodWithPointer> AUTH_USER_CHAT_ACTIVE_USERS_METHODS{HTTP::Requests::Method::get};
 
         class UsersData
         {
@@ -49,7 +50,10 @@ namespace Users
         public:
             UsersData()
                 : _unauthorizedAllowedMethods{"/login", Users::AccessRights::Methods{UNAUTHUSER_LOGIN_METHODS}}
-                , _defaultAuthorizedAllowedMethods{"/chat", Users::AccessRights::Methods{AUTH_USER_CHAT_METHODS}, "/login", Users::AccessRights::Methods{AUTH_USER_LOGIN_METHODS}}
+                , _defaultAuthorizedAllowedMethods{"/chat", Users::AccessRights::Methods{AUTH_USER_CHAT_METHODS}
+                                                , "/login", Users::AccessRights::Methods{AUTH_USER_LOGIN_METHODS}
+                                                , "/chat/activeUsers", Users::AccessRights::Methods{AUTH_USER_CHAT_ACTIVE_USERS_METHODS}
+                                                }
             {}
 
             ~UsersData() = default;
@@ -132,7 +136,14 @@ namespace Users
             const AccessRights::RootAccessRightsNode& getUnauthorizedAllowedMethods() const
             {
                 return _unauthorizedAllowedMethods;
-            } 
+            }
+
+            boost::string_view getUserName(const boost::string_view strToken)
+            {
+                Token token = viewToToken(strToken);
+                const UserData& userData = _usersData.at(token);
+                return *(userData.ItUserName);
+            }
 
         private:
             std::map<Token, UserData> _usersData;

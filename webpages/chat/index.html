@@ -33,7 +33,7 @@
 	<div id="wrapper">
 		<table>
 			<tr id="header">
-				<td id="title" class="column">Напурник</td>
+				<td id="title" class="column">Some dialog</td>
 				<td id="info" class="column">
 					<button onclick="doLogout()">Info</button>
 				</td>
@@ -50,6 +50,27 @@
 			</tr>
 		</table>
 	</div>
+
+	<script>
+		let socket = new WebSocket("ws://127.0.0.1:8001/chat/activeUsers");
+		
+		socket.onopen = function(e) {
+			console.log("Connection established");
+		};
+
+		socket.onmessage = function(event) {
+			if (event.data.startsWith("-a"))
+			{
+				alert("New user " + event.data.substr(2))
+			}
+			else
+				if (event.data.startsWith("-d"))
+				{
+					alert("Off user " + event.data.substr(2))
+				}
+			console.log(`New message: ${event.data}`);
+		};
+	</script>
 </body>
 
 </html>

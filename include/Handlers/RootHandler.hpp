@@ -23,7 +23,14 @@ namespace Handlers
     protected:
         HTTP::Responses::IResponse::Ptr doGet(HTTP::Requests::Request&& request, URI::Segment target) override
         {
-            return WebPageLoader::getResponseWithPage(std::move(request), target);
+            if (target.isEmpty())
+            {
+                return std::make_unique<HTTP::Responses::RedirectResponse>(std::move(request), "/login", "URL: \"/\" is not allowed");
+            }
+            else
+            {
+                return WebPageLoader::getResponseWithPage(std::move(request), target);
+            }
         }
     };
 };

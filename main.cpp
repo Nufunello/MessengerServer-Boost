@@ -10,10 +10,6 @@
 
 #include <boost/asio/io_service.hpp>
 
-namespace {
-    constexpr HTTP::Requests::Field TOKEN_FIELD = HTTP::Requests::Field::cookie;
-}
-
 const Users::AccessRights::Methods Users::AccessRights::AccessRightsNode::sEmptyMethods = Users::AccessRights::Methods{};
 
 template <typename Response>
@@ -32,15 +28,15 @@ void proccessRequest(HTTP::Requests::Request&& request, Factories::RootFactory& 
          
         URI::URIIterator iterator{target};
 
-        Handlers::AHandler::Ptr handler = rootFactory.getHandler(iterator);
+        Handlers::AHandler* handler = rootFactory.getHandler(iterator);
         const URI::Segment fileSegment  = iterator.next();
 
         if (handler && !iterator.hasNext())
         {
-            const auto itToken = message.find(TOKEN_FIELD);
-            const Users::AccessRights::RootAccessRightsNode& accessRights = itToken == std::end(message) 
-                                                                    ? usersData.getUnauthorizedAllowedMethods() 
-                                                                    : usersData.getUsersAllowedMethods(itToken->value());
+            auto token = request.getToken();
+            const Users::AccessRights::RootAccessRightsNode& accessRights = token.has_value()
+                                                                    ? usersData.getUsersAllowedMethods(token.value())
+                                                                    : usersData.getUnauthorizedAllowedMethods();
                                   
             const Users::AccessRights::Methods& allowedMethods = accessRights.getAllowedMethods(target); 
 
@@ -58,10 +54,8 @@ void proccessRequest(HTTP::Requests::Request&& request, Factories::RootFactory& 
     }
 }
 
-void acceptRequest(boost::asio::io_service& service, boost::asio::ip::tcp::acceptor& acceptor, Factories::RootFactory& rootFactory, Users::Data::UsersData& usersData)
+void acceptRequest(boost::asio::io_service& service, boost::asio::ip::tcp::acceptor& acceptor, boost::asio::ip::tcp::socket&& socket, Factories::RootFactory& rootFactory, Users::Data::UsersData& usersData)
 {
-    boost::asio::ip::tcp::socket socket{service};
-    acceptor.accept(socket);
     HTTP::Requests::Request request{std::move(socket)};
 
     if (!request.isValid())
@@ -73,6 +67,13 @@ void acceptRequest(boost::asio::io_service& service, boost::asio::ip::tcp::accep
     {
         proccessRequest(std::move(request), rootFactory, usersData);
     }
+
+    acceptor.async_accept(socket, [&](const boost::system::error_code& error){
+        if (!error)
+        {
+            acceptRequest(service, acceptor, std::move(socket), rootFactory, usersData);
+        }
+    });
 }
 
 int main(int argc, char** argv)
@@ -91,12 +92,14 @@ int main(int argc, char** argv)
         Factories::RootFactory rootFactory(usersData);
 
 		boost::asio::ip::tcp::acceptor acceptor(service, endpoint);
-        
-        while (true)
-        {
-            acceptRequest(service, acceptor, rootFactory, usersData);
-        }
-        
+        boost::asio::ip::tcp::socket socket{service};
+        acceptor.async_accept(socket, [&](const boost::system::error_code& error){
+            if (!error)
+            {
+                acceptRequest(service, acceptor, std::move(socket), rootFactory, usersData);
+            }
+        });
+        service.run();
 	}
 	catch(const std::exception& e)
 	{

@@ -1,16 +1,18 @@
 #pragma once
 
-#include "Factories/AHandlerFactory.hpp"
+#include "Factories/AMappedHandlerFactory.hpp"
+#include "Factories/ActiveUsersFactory.hpp"
+
 #include "Handlers/ChatHandler.hpp"
 
 namespace Factories
 {
     class ChatFactory
-        : public AHandlerFactory
+        : public AMappedHandlerFactory
     {
     public:
         ChatFactory(Users::Data::UsersData& authorizedUsers)
-            : _chatHandler{authorizedUsers}
+            : AMappedHandlerFactory{"activeUsers", std::make_unique<ActiveUsersFactory>(authorizedUsers)}
         {
             AHandlerFactory::setHandler(&_chatHandler);
         }
@@ -19,6 +21,6 @@ namespace Factories
 
     private:
         Handlers::ChatHandler _chatHandler;
-    
+
     };
 };

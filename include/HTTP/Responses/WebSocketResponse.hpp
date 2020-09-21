@@ -12,21 +12,16 @@ namespace HTTP
             : public IResponse
         {
         public:
-            WebSocketResponse(boost::beast::websocket::stream<boost::beast::tcp_stream>& websocket)
-                : _websocket{websocket}
-            {}
-            
+            WebSocketResponse() = default;
             ~WebSocketResponse() = default;
 
         public:
             virtual void send() override
             {
-                _websocket.accept();
             }
 
         private:
-            boost::beast::websocket::stream<boost::beast::tcp_stream>& _websocket;
-
+            
         };
     };
 };

@@ -15,9 +15,6 @@ namespace Handlers
         : public AStrictedHandler
         , private WebPageLoader
     {
-    private:
-        static constexpr HTTP::Requests::Field TOKEN_FIELD = HTTP::Requests::Field::cookie;
-
     public:
         LoginHandler(Users::Data::UsersData& usersData)
             : WebPageLoader{"/webpages/login"}
@@ -74,17 +71,15 @@ namespace Handlers
 
         HTTP::Responses::IResponse::Ptr doDelete(HTTP::Requests::Request&& request, URI::Segment target) override
         {
-            const HTTP::Requests::Message& message = request.message();
-            const HTTP::Requests::Message::const_iterator itToken = message.find(TOKEN_FIELD);
-
-            if (itToken == std::end(message))
+            auto token = request.getToken();
+            if (!token.has_value())
             {
                 return std::make_unique<HTTP::Responses::UnauthorizedResponse>(std::move(request));
             }
 
             using namespace Users::Data;
             
-            UsersData::LogoutStatus status = _usersData.LogoutUser(itToken->value());
+            UsersData::LogoutStatus status = _usersData.LogoutUser(token.value());
 
             switch(status)
             {

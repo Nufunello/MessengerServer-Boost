@@ -29,7 +29,7 @@ namespace URI
         }
 
     public:
-        inline bool isLast() const
+        inline bool isLastSegment() const
         {
             return _uri.find(SEGMENT_DIVIDER) == _uri.npos;
         }

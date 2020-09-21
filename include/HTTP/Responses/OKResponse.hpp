@@ -9,7 +9,7 @@ namespace HTTP
         class OKResponse
             : public HTTPResponse
         {
-        protected:
+        public:
             inline static Response makeResponse(std::string body)
             {
                 auto response = HTTPResponse::makeResponse(Status::ok, "OK");
@@ -18,11 +18,7 @@ namespace HTTP
             }
 
         public:
-            OKResponse(boost::asio::ip::tcp::socket&& socket)
-                : HTTPResponse{std::move(socket), boost::beast::http::status::ok, "OK"}
-            {}
-
-            OKResponse(boost::asio::ip::tcp::socket&& socket, std::string body)
+            OKResponse(boost::asio::ip::tcp::socket&& socket, std::string body = "")
                 : HTTPResponse{std::move(socket), this->makeResponse(std::move(body))}
             {}
 

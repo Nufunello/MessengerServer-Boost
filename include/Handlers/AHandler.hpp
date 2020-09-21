@@ -17,9 +17,6 @@ namespace Handlers
 {
     class AHandler
     {
-    public:
-        using Ptr = AHandler*;
-
     protected:
         using MethodPointer = HTTP::Responses::IResponse::Ptr (AHandler::*)(HTTP::Requests::Request&&, URI::Segment);
 

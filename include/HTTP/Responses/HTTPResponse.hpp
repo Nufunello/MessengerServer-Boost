@@ -46,7 +46,11 @@ namespace HTTP
             virtual void send() override
             {
                 boost::beast::http::write(_socket, _response);
-	            _socket.close();
+            }
+
+            virtual boost::asio::ip::tcp::socket getSocket()
+            {
+                return std::move(_socket);
             }
 
         private:

@@ -44,7 +44,7 @@ namespace Factories
         virtual ~AMappedHandlerFactory() = default;
     
     public:
-        virtual Handlers::AHandler::Ptr getHandler(URI::URIIterator& iterator) const override
+        virtual Handlers::AHandler* getHandler(URI::URIIterator& iterator) const override
         {
             if (iterator.hasNext())
             {
