@@ -11,7 +11,14 @@ namespace Factories
         using Ptr = std::unique_ptr<AHandlerFactory>;
         
     protected:
-        AHandlerFactory() = default;
+        AHandlerFactory()
+            : _handler{nullptr}
+        {}
+
+        AHandlerFactory(const AHandlerFactory&) = default;
+
+    public:
+        virtual ~AHandlerFactory() = default;
 
     protected:
         inline void setHandler(Handlers::AHandler* handler)
@@ -22,6 +29,7 @@ namespace Factories
     public:
         virtual Handlers::AHandler* getHandler(URI::URIIterator& iterator) const
         {
+            boost::ignore_unused(iterator);
             return _handler;
         }
 
@@ -29,4 +37,4 @@ namespace Factories
         Handlers::AHandler* _handler;
 
     };
-};
+}

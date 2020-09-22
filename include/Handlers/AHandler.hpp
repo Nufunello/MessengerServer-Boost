@@ -10,8 +10,8 @@ namespace Users
     {
         class MethodWithPointer;
         class Methods;
-    };
-};
+    }
+}
 
 namespace Handlers
 {
@@ -34,22 +34,26 @@ namespace Handlers
     protected:
         virtual HTTP::Responses::IResponse::Ptr doPost(HTTP::Requests::Request&& request, URI::Segment target)
         {
+            boost::ignore_unused(target);
             return std::make_unique<HTTP::Responses::NotImplementedResponse>(std::move(request));
         }
 
         virtual HTTP::Responses::IResponse::Ptr doGet(HTTP::Requests::Request&& request, URI::Segment target)
         {
+            boost::ignore_unused(target);
             return std::make_unique<HTTP::Responses::NotImplementedResponse>(std::move(request));
         }
 
         virtual HTTP::Responses::IResponse::Ptr doDelete(HTTP::Requests::Request&& request, URI::Segment target)
         {
+            boost::ignore_unused(target);
             return std::make_unique<HTTP::Responses::NotImplementedResponse>(std::move(request));
         }
 
     public:
         virtual HTTP::Responses::IResponse::Ptr doRequest(HTTP::Requests::Request&& request, URI::Segment target, const Users::AccessRights::Methods& methodsAllowed)
         {
+            boost::ignore_unused(methodsAllowed);
             switch (request.message().method())
             {
             case HTTP::Requests::Method::get:
@@ -72,5 +76,5 @@ namespace Handlers
 
     };
 
-};
+}
 

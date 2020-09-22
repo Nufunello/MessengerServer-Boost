@@ -17,6 +17,7 @@ namespace Factories
                     "login", std::make_unique<LoginFactory>(usersData),
                     "chat", std::make_unique<ChatFactory>(usersData)
             }
+            , _rootHandler{}
         {
             AHandlerFactory::setHandler(&_rootHandler);
         }
@@ -27,4 +28,4 @@ namespace Factories
         Handlers::RootHandler _rootHandler;
     
     };
-};
+}

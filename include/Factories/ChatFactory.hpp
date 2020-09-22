@@ -13,6 +13,7 @@ namespace Factories
     public:
         ChatFactory(Users::Data::UsersData& authorizedUsers)
             : AMappedHandlerFactory{"activeUsers", std::make_unique<ActiveUsersFactory>(authorizedUsers)}
+            , _chatHandler{}
         {
             AHandlerFactory::setHandler(&_chatHandler);
         }
@@ -23,4 +24,4 @@ namespace Factories
         Handlers::ChatHandler _chatHandler;
 
     };
-};
+}

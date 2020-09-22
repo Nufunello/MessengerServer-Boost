@@ -37,7 +37,7 @@ void proccessRequest(HTTP::Requests::Request&& request, Factories::RootFactory& 
             const Users::AccessRights::RootAccessRightsNode& accessRights = token.has_value()
                                                                     ? usersData.getUsersAllowedMethods(token.value())
                                                                     : usersData.getUnauthorizedAllowedMethods();
-                                  
+
             const Users::AccessRights::Methods& allowedMethods = accessRights.getAllowedMethods(target); 
 
             HTTP::Responses::IResponse::Ptr pResponse = handler->doRequest(std::move(request), fileSegment, allowedMethods);
@@ -80,8 +80,12 @@ int main(int argc, char** argv)
 {
     try
 	{
+        if (argc < 3)
+        {
+            throw std::runtime_error("Invalid arguments count");
+        }
 		const std::string ip = argv[1];
-		const size_t port = atoi(argv[2]);
+		const short unsigned int port = static_cast<short unsigned int>(atoi(argv[2]));
 		boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::address::from_string(ip), port);
 
 		std::cout << "Server is running on " << ip << ":" << port << std::endl;

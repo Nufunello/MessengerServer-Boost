@@ -25,5 +25,5 @@ namespace HTTP
             virtual void send() = 0;
 
         };
-    };
-};
+    }
+}

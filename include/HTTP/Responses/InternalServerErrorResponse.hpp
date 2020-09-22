@@ -17,5 +17,5 @@ namespace HTTP
             ~InternalServerErrorResponse() = default;
             
         };
-    };
-};
+    }
+}

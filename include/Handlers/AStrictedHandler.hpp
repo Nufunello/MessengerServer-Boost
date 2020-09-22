@@ -18,6 +18,7 @@ namespace Handlers
     protected:
         virtual HTTP::Responses::IResponse::Ptr findAppropiateResponse(HTTP::Requests::Request&& request, const HTTP::Requests::Method method)
         {
+            boost::ignore_unused(method);
             return std::make_unique<HTTP::Responses::MethodNotAllowedResponse>(std::move(request));
         }
 
@@ -30,4 +31,4 @@ namespace Handlers
         }
 
     };
-};
+}

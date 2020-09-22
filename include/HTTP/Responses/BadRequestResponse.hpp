@@ -17,5 +17,5 @@ namespace HTTP
             ~BadRequestResponse() = default;
             
         };
-    };
-};
+    }
+}

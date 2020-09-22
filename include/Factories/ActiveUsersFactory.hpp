@@ -16,7 +16,7 @@ namespace Factories
             AHandlerFactory::setHandler(&_activeUsersHandler);
         }
 
-        ~ActiveUsersFactory() = default;
+        virtual ~ActiveUsersFactory() = default;
 
     public:
         Handlers::AHandler* getHandler(URI::URIIterator& iterator) const override
@@ -28,4 +28,4 @@ namespace Factories
         Handlers::ActiveUsersHandlers _activeUsersHandler;
     
     };
-};
+}

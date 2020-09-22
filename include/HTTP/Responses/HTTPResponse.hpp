@@ -24,11 +24,6 @@ namespace HTTP
                 response.reason(reason);
                 return response;
             }
-            
-        protected:
-            inline HTTPResponse(boost::asio::ip::tcp::socket&& socket)
-                : _socket{std::move(socket)}
-            {}
 
         public:
             inline HTTPResponse(boost::asio::ip::tcp::socket&& socket, const Status status, const boost::string_view reason)
@@ -58,5 +53,5 @@ namespace HTTP
             const Response _response;
 
         };
-    };
-};
+    }
+}

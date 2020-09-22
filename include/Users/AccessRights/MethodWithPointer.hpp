@@ -46,8 +46,8 @@ namespace Users
             const Handlers::AHandler::MethodPointer MethodPointer;
         
         };
-    };
-};
+    }
+}
 
 namespace std {
     template <>
@@ -57,5 +57,5 @@ namespace std {
         {
             return size_t(k.Method);
         }
-    };
-};
+    }
+}

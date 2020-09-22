@@ -24,7 +24,9 @@ namespace Handlers
         {
         public:
             WebSocket(HTTP::Requests::Request&& request)
-                : _websocket{std::move(request)}
+                : _buffer{128}
+                , _websocket{std::move(request)}
+                , _name{""}
                 , _isDisconnected{false}
             {
                 boost::system::error_code ec;
@@ -32,7 +34,8 @@ namespace Handlers
                 _isDisconnected = ec.failed();
 
                 _websocket.async_read(_buffer, [&](const boost::system::error_code& errorCode, std::size_t bytes_transferred){
-                    _isDisconnected = ec.failed();
+                    boost::ignore_unused(bytes_transferred);
+                    _isDisconnected = errorCode.failed();
                 });
             }
 
@@ -72,9 +75,9 @@ namespace Handlers
 
     public:
         ActiveUsersHandlers(Users::Data::UsersData& usersData)
-            : _usersData{usersData}
-        {
-            _updateWebSockets = std::thread([&](){
+            : _websockets{}
+            , _usersData{usersData}
+            , _updateWebSockets{std::thread([&](){
                 while (true)
                 {
                     std::unique_lock<std::mutex> lock(_mutex, std::defer_lock);
@@ -85,7 +88,10 @@ namespace Handlers
                         std::this_thread::sleep_for(std::chrono::seconds{1});
                     }
                 }
-            });
+            })}
+            , _mutex{}
+        {
+            _websockets.reserve(C_AVG_USERS);
         }
 
         virtual ~ActiveUsersHandlers() = default;
@@ -133,6 +139,11 @@ namespace Handlers
     protected:
         HTTP::Responses::IResponse::Ptr doGet(HTTP::Requests::Request&& request, URI::Segment target) override
         {
+            if (!target.isEmpty())
+            {
+                return std::make_unique<HTTP::Responses::ResourceNotFoundResponse>(std::move(request));
+            }
+
             auto ws = std::make_unique<WebSocket>(std::move(request));
 
             if (!ws->isDisconnected())
@@ -156,4 +167,4 @@ namespace Handlers
         std::mutex _mutex;
 
     };
-};
+}

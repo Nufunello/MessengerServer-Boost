@@ -71,6 +71,11 @@ namespace Handlers
 
         HTTP::Responses::IResponse::Ptr doDelete(HTTP::Requests::Request&& request, URI::Segment target) override
         {
+            if (!target.isEmpty())
+            {
+                return std::make_unique<HTTP::Responses::ResourceNotFoundResponse>(std::move(request));
+            }
+
             auto token = request.getToken();
             if (!token.has_value())
             {
@@ -121,4 +126,4 @@ namespace Handlers
         
     };
     
-};
+}

@@ -22,6 +22,9 @@ namespace HTTP
 
             Request(boost::asio::ip::tcp::socket&& socket)
                 : boost::asio::ip::tcp::socket{std::move(socket)}
+                , _stream{1024}
+                , _ec{}
+                , _parser{}
             {
                 boost::beast::http::read(*this, _stream, _parser, _ec);
             }
@@ -62,6 +65,5 @@ namespace HTTP
             boost::beast::http::request_parser<boost::beast::http::string_body> _parser;
             
         };
-        
-    };
-};
+    }
+}

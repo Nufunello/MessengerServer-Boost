@@ -14,7 +14,9 @@ namespace Factories
 
     private:
         static void emplaceInMap(Map& map)
-        {}
+        {
+            boost::ignore_unused(map);
+        }
 
         template<typename Segment, typename Pointer, typename ...Segments>
         static void emplaceInMap(Map& map, Segment segment, Pointer pointer, Segments... segments)
@@ -73,4 +75,4 @@ namespace Factories
         const Map _factories;
         
     };
-};
+}

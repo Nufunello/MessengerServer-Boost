@@ -47,4 +47,4 @@ namespace URI
         boost::string_view _segment;
 
     };
-};
+}

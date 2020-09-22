@@ -34,5 +34,5 @@ namespace Users
             ~RootAccessRightsNode()                           = default;
         };
         
-    };
-};
+    }
+}

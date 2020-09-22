@@ -49,7 +49,9 @@ namespace Users
 
         public:
             UsersData()
-                : _unauthorizedAllowedMethods{"/login", Users::AccessRights::Methods{UNAUTHUSER_LOGIN_METHODS}}
+                : _usersData{}
+                , _usersNames{}
+                , _unauthorizedAllowedMethods{"/login", Users::AccessRights::Methods{UNAUTHUSER_LOGIN_METHODS}}
                 , _defaultAuthorizedAllowedMethods{"/chat", Users::AccessRights::Methods{AUTH_USER_CHAT_METHODS}
                                                 , "/login", Users::AccessRights::Methods{AUTH_USER_LOGIN_METHODS}
                                                 , "/chat/activeUsers", Users::AccessRights::Methods{AUTH_USER_CHAT_ACTIVE_USERS_METHODS}
@@ -152,5 +154,5 @@ namespace Users
             const AccessRights::RootAccessRightsNode _unauthorizedAllowedMethods;
             const AccessRights::RootAccessRightsNode _defaultAuthorizedAllowedMethods;
         };
-    };
-};
+    }
+}

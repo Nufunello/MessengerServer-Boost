@@ -16,10 +16,10 @@ namespace Factories
             AHandlerFactory::setHandler(&_loginHandler);
         }
 
-        ~LoginFactory() = default;
+        virtual ~LoginFactory() = default;
 
     private:
         Handlers::LoginHandler _loginHandler;
     
     };
-};
+}
