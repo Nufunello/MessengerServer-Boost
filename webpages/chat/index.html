@@ -52,24 +52,71 @@
 	</div>
 
 	<script>
-		let socket = new WebSocket("ws://127.0.0.1:8001/chat/activeUsers");
-		
+		let socket = new WebSocket("ws://127.0.0.1:8001/websocket");
+		let map = new Map();
+
 		socket.onopen = function(e) {
 			console.log("Connection established");
 		};
 
 		socket.onmessage = function(event) {
-			if (event.data.startsWith("-a"))
+			let state = event.data[0];
+			let message = event.data.substr(1);
+			let token = message.substr(0, 35);
+
+			switch (state)
 			{
-				alert("New user " + event.data.substr(2))
-			}
-			else
-				if (event.data.startsWith("-d"))
+				case 'a':
 				{
-					alert("Off user " + event.data.substr(2))
+					let username = message.substr(36);
+					map.set(token, username + "+");
+					console.log("New user " + username + " has joined chat");
+					break;
 				}
-			console.log(`New message: ${event.data}`);
-		};
+				case 'l':
+				{
+					let username = map.delete(token);
+					break;
+				}
+				case 'c':
+				{
+					if (map.has(token))
+					{
+						let username = map.get(token);
+						username = username.replace(/.$/,"-");
+						map.set(token, username);
+					}
+					else
+					{
+						console.log("Me: " + token);
+					}
+					break;
+				}
+				case 'o':
+				{
+					if (map.has(token))
+					{
+						let username = map.get(token);
+						username = username.replace(/.$/,"+");
+						map.set(token, username);
+					}
+					else
+					{
+						console.log("Me: " + token);
+					}
+					break;
+				}
+				case 'i':
+				{
+					let username = message.substr(36);
+					console.log("Me: " + username);
+				}
+			}
+
+			console.log("-------------------");
+			console.log(map);
+			console.log("-------------------");
+		};	
 	</script>
 </body>
 

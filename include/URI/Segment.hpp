@@ -17,6 +17,8 @@ namespace URI
 
         inline ~Segment() = default;
 
+        inline Segment(const Segment&) = default;
+
     public:
         inline Segment& operator=(const Segment& segment)
         {

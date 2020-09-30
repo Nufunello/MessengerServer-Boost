@@ -30,7 +30,7 @@ namespace Users
             }
         
         public:
-            Handlers::AHandler::MethodPointer const getMethodPointer(const HTTP::Requests::Method method) const
+            Handlers::AHandler::MethodPointer getMethodPointer(const HTTP::Requests::Method method) const
             {
                 const auto itMethod = _methods.find(method);
                 return itMethod == std::end(_methods) 
@@ -42,4 +42,4 @@ namespace Users
 
         };
     }
-};
+}

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "HTTP/Cookies.hpp"
+
 #include <boost/asio/streambuf.hpp>
 
 #include <boost/beast/http/verb.hpp>
@@ -27,6 +29,7 @@ namespace HTTP
                 , _parser{}
             {
                 boost::beast::http::read(*this, _stream, _parser, _ec);
+                _cookie = Cookie{this->message()[Field::cookie]};
             }
 
             ~Request() = default;
@@ -54,15 +57,14 @@ namespace HTTP
 
             inline std::optional<boost::string_view> getToken() const
             {
-                const Message& message = this->message(); 
-                const auto itToken = message.find(HTTP::Requests::Field::cookie);
-                return (itToken == std::end(message)) ? std::optional<boost::string_view>{} : std::make_optional(itToken->value());
+                return _cookie.getAttribute("Token");
             }
 
         private:
 	        boost::asio::streambuf _stream;
 	        boost::beast::error_code _ec;
             boost::beast::http::request_parser<boost::beast::http::string_body> _parser;
+            Cookie _cookie;
             
         };
     }

@@ -48,11 +48,11 @@ namespace Handlers
             {
                 case UsersData::LoginStatus::OK:
                 {
-                    HTTP::Responses::Response response;
-                    response.result(HTTP::Responses::Status::ok);
-                    response.reason("OK");
-                    response.insert(HTTP::Requests::Field::set_cookie, token);
-                    return std::make_unique<HTTP::Responses::HTTPResponse>(std::move(request), std::move(response));
+                    auto pResponse = std::make_unique<HTTP::Responses::HTTPResponse>(std::move(request), HTTP::Responses::Status::ok, "OK");
+                    pResponse->setCookie(HTTP::Cookie{
+                        "Token", std::move(token)
+                    });
+                    return pResponse;
                 }
 
                 case UsersData::LoginStatus::UsernameAlredyInUse:

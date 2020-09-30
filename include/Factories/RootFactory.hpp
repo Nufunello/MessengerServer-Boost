@@ -14,8 +14,9 @@ namespace Factories
     public:
         RootFactory(Users::Data::UsersData& usersData)
             : AMappedHandlerFactory{
-                    "login", std::make_unique<LoginFactory>(usersData),
-                    "chat", std::make_unique<ChatFactory>(usersData)
+                      "login", std::make_unique<LoginFactory>(usersData)
+                    , "websocket", std::make_unique<WebSocketHandlerFactory>(usersData)
+                    , "chat", std::make_unique<ChatFactory>()
             }
             , _rootHandler{}
         {

@@ -57,5 +57,5 @@ namespace std {
         {
             return size_t(k.Method);
         }
-    }
+    };
 }

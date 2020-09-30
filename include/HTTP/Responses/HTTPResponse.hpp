@@ -1,8 +1,7 @@
 #pragma once
 
-#include <iostream>
-
 #include "HTTP/Responses/IResponse.hpp"
+#include "HTTP/Requests/Request.hpp"
 
 #include <boost/beast/http/write.hpp>
 
@@ -26,17 +25,22 @@ namespace HTTP
             }
 
         public:
-            inline HTTPResponse(boost::asio::ip::tcp::socket&& socket, const Status status, const boost::string_view reason)
-                : _socket{std::move(socket)}
-                , _response{this->makeResponse(status, reason)}
-            {}
-
             inline HTTPResponse(boost::asio::ip::tcp::socket&& socket, Response response)
                 : _socket{std::move(socket)}
                 , _response{std::move(response)}
             {}
 
+            inline HTTPResponse(boost::asio::ip::tcp::socket&& socket, const Status status, const boost::string_view reason)
+                : _socket{std::move(socket)}
+                , _response{this->makeResponse(status, reason)}
+            {}
+
             virtual ~HTTPResponse() = default;
+
+            void setCookie(HTTP::Cookie cookie)
+            {
+                _response.set(HTTP::Requests::Field::set_cookie, cookie.asString());
+            }
 
             virtual void send() override
             {
@@ -50,7 +54,7 @@ namespace HTTP
 
         private:
             boost::asio::ip::tcp::socket _socket;
-            const Response _response;
+            Response _response;
 
         };
     }

@@ -2,21 +2,21 @@
 
 #include "Factories/AHandlerFactory.hpp"
 
-#include "Handlers/ActiveUsersHandler.hpp"
+#include "Handlers/WebSocketHandler.hpp"
 
 namespace Factories
 {
-    class ActiveUsersFactory
+    class WebSocketHandlerFactory
         : public AHandlerFactory
     {
     public:
-        ActiveUsersFactory(Users::Data::UsersData& usersData)
-            : _activeUsersHandler{usersData}
+        WebSocketHandlerFactory(Users::Data::UsersData& usersData)
+            : _websocketHandler{usersData}
         {
-            AHandlerFactory::setHandler(&_activeUsersHandler);
+            AHandlerFactory::setHandler(&_websocketHandler);
         }
 
-        virtual ~ActiveUsersFactory() = default;
+        virtual ~WebSocketHandlerFactory() = default;
 
     public:
         Handlers::AHandler* getHandler(URI::URIIterator& iterator) const override
@@ -25,7 +25,7 @@ namespace Factories
         }
 
     private:
-        Handlers::ActiveUsersHandlers _activeUsersHandler;
+        Handlers::WebSocketHandler _websocketHandler;
     
     };
 }

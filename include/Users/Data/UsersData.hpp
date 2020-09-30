@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Users/AccessRights/RootAccessRightsNode.hpp"
+#include "HTTP/Sockets/WebSocket.hpp"
+
+#include <shared_mutex>
 
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -13,7 +16,63 @@ namespace Users
         constexpr std::initializer_list<Users::AccessRights::MethodWithPointer> UNAUTHUSER_LOGIN_METHODS{HTTP::Requests::Method::get, HTTP::Requests::Method::post};
         constexpr std::initializer_list<Users::AccessRights::MethodWithPointer> AUTH_USER_LOGIN_METHODS{HTTP::Requests::Method::delete_};
         constexpr std::initializer_list<Users::AccessRights::MethodWithPointer> AUTH_USER_CHAT_METHODS{HTTP::Requests::Method::get, HTTP::Requests::Method::post};
-        constexpr std::initializer_list<Users::AccessRights::MethodWithPointer> AUTH_USER_CHAT_ACTIVE_USERS_METHODS{HTTP::Requests::Method::get};
+        constexpr std::initializer_list<Users::AccessRights::MethodWithPointer> AUTH_USER_WEBSOCKET_METHODS{HTTP::Requests::Method::get};
+
+        using Token = boost::uuids::uuid;
+        using NameSet = std::set<std::string, std::less<>>;
+        using WebSocketMap = std::map<Token, std::shared_ptr<HTTP::Sockets::WebSocket>>;
+
+        std::string TokenToStr(const Token& token)
+        {
+            return boost::uuids::to_string(token);
+        }
+
+        struct WebSocketUpdateInfo
+        {
+            const boost::string_view UserName;
+            const HTTP::Sockets::WebSocket::State PrevState;
+            const Token& WebSocketToken;
+            HTTP::Sockets::WebSocket& WebSocket;
+        };
+
+        class UserData
+        {
+        public:
+            inline UserData(AccessRights::RootAccessRightsNode accessRights, NameSet::const_iterator itUserName, WebSocketMap::iterator itWebSocket)
+                : _accessRights{std::move(accessRights)}
+                , _itUserName{std::move(itUserName)}
+                , _itWebSocket{std::move(itWebSocket)}
+            {}
+
+            inline ~UserData()
+            {
+                auto pWS = _itWebSocket->second;
+                if (pWS)
+                {
+                    pWS->setLogouted();
+                }
+            }
+
+        public:
+            inline boost::string_view getUserName() const
+            {
+                return *_itUserName;
+            }
+
+            inline HTTP::Sockets::WebSocket& getWebSocket()
+            {
+                return *_itWebSocket->second;
+            }
+
+        private:
+            AccessRights::RootAccessRightsNode _accessRights;
+            const NameSet::const_iterator _itUserName;
+            const WebSocketMap::iterator  _itWebSocket;
+
+        private:
+            friend class UsersData;
+
+        };
 
         class UsersData
         {
@@ -32,54 +91,60 @@ namespace Users
                 NotOK
             };
 
-        private:
-            using Token = boost::uuids::uuid; 
-
-        private:
-            struct UserData
-            {
-                UserData(const AccessRights::RootAccessRightsNode& accessRights, std::set<std::string>::const_iterator&& itUserName)
-                    : AccessRights{accessRights}
-                    , ItUserName{std::move(itUserName)}
-                {}
-
-                AccessRights::RootAccessRightsNode AccessRights;
-                const std::set<std::string>::const_iterator ItUserName;
-            };
-
         public:
-            UsersData()
-                : _usersData{}
+            UsersData(boost::asio::io_service& service)
+                : _service{service}
+                , _usersData{}
                 , _usersNames{}
                 , _unauthorizedAllowedMethods{"/login", Users::AccessRights::Methods{UNAUTHUSER_LOGIN_METHODS}}
                 , _defaultAuthorizedAllowedMethods{"/chat", Users::AccessRights::Methods{AUTH_USER_CHAT_METHODS}
                                                 , "/login", Users::AccessRights::Methods{AUTH_USER_LOGIN_METHODS}
-                                                , "/chat/activeUsers", Users::AccessRights::Methods{AUTH_USER_CHAT_ACTIVE_USERS_METHODS}
+                                                , "/websocket", Users::AccessRights::Methods{AUTH_USER_WEBSOCKET_METHODS}
                                                 }
             {}
 
             ~UsersData() = default;
 
         private:
-            Token generateToken()
+            inline Token generateToken() const
             {
                 static boost::uuids::random_generator generator;
                 return generator.operator()();
             }
 
         private:
-            std::string addUser(const std::set<std::string, std::less<>>::const_iterator itUser, const boost::string_view loginName, Token&& token)
+            std::string addUser(const NameSet::const_iterator itUser, const boost::string_view loginName, Token&& token)
             {
-                auto itUserName = _usersNames.emplace_hint(itUser, loginName);
-                std::string tokenStr = boost::uuids::to_string(token);
-                _usersData.emplace(std::move(token), UserData{_defaultAuthorizedAllowedMethods, std::move(itUserName)});
+                std::unique_lock lock{_mutex};
+
+                auto itUserName = _usersNames.emplace_hint(itUser, loginName.to_string());
+
+                auto itWebSocket = _websockets.emplace(std::piecewise_construct
+                                , std::forward_as_tuple(generateToken())
+                                , std::forward_as_tuple(std::make_shared<HTTP::Sockets::WebSocket>(_service))).first;
+
+                auto tokenStr = TokenToStr(token);
+                const auto& addedUser = _usersData.emplace(std::piecewise_construct
+                                , std::forward_as_tuple(std::move(token))
+                                , std::forward_as_tuple(_defaultAuthorizedAllowedMethods, std::move(itUserName), std::move(itWebSocket))).first->second;
+                boost::ignore_unused(addedUser);
                 return tokenStr;
             }
             
-            Token viewToToken(const boost::string_view strToken)
+            inline Token viewToToken(const boost::string_view strToken) const
             {
                 static boost::uuids::string_generator stringGenerator;
                 return stringGenerator.operator()(strToken.begin(), strToken.end());
+            }
+
+            LogoutStatus LogoutUser(const std::map<Token, UserData>::const_iterator& itUser)
+            {
+                std::unique_lock lock{_mutex};
+
+                _usersNames.erase(itUser->second._itUserName);
+                _websockets.erase(itUser->second._itWebSocket);
+                _usersData.erase(itUser);
+                return LogoutStatus::OK;
             }
 
         public:
@@ -88,7 +153,8 @@ namespace Users
                 try
                 {
                     Token token = viewToToken(strToken);
-                    auto itUser = _usersData.find(token);
+                    std::shared_lock lock{_mutex};
+                    const auto itUser = _usersData.find(token);
 
                     if (itUser == std::end(_usersData))
                     {
@@ -96,9 +162,8 @@ namespace Users
                     }
                     else
                     {
-                        _usersNames.erase(itUser->second.ItUserName);
-                        _usersData.erase(itUser);
-                        return LogoutStatus::OK;
+                        lock.unlock();
+                        return LogoutUser(itUser);
                     }
                 }
                 catch(const std::exception& e)
@@ -109,12 +174,14 @@ namespace Users
             
             std::string addUser(const boost::string_view loginName, LoginStatus& loginStatus)
             {
-                auto itUserName = _usersNames.find(loginName);
+                std::shared_lock lock{_mutex};
+                const auto itUserName = _usersNames.find(loginName);
                 if (itUserName != std::end(_usersNames))
                 {
                     loginStatus = LoginStatus::UsernameAlredyInUse;
                     return std::string();
                 }
+                lock.unlock();
 
                 try
                 {
@@ -128,31 +195,56 @@ namespace Users
                 }
             }
 
-            const AccessRights::RootAccessRightsNode& getUsersAllowedMethods(const boost::string_view strToken)
+            const AccessRights::RootAccessRightsNode& getUserAcessRights(const boost::string_view strToken)
             {
-                Token token = viewToToken(strToken);;
-                const auto itUser = _usersData.find(token);
-                return itUser == std::end(_usersData) ? _unauthorizedAllowedMethods : itUser->second.AccessRights;
-            }
+                const Token token = viewToToken(strToken);
 
-            const AccessRights::RootAccessRightsNode& getUnauthorizedAllowedMethods() const
+                std::shared_lock lock{_mutex};
+                const auto itUser = _usersData.find(token);
+                return itUser == std::end(_usersData) ? _unauthorizedAllowedMethods : itUser->second._accessRights;
+            }
+ 
+            inline const AccessRights::RootAccessRightsNode& getUnauthorizedUserAcessRights() const
             {
                 return _unauthorizedAllowedMethods;
             }
 
-            boost::string_view getUserName(const boost::string_view strToken)
+            inline bool isUserAuthorized(boost::string_view tokenStr) const
             {
-                Token token = viewToToken(strToken);
-                const UserData& userData = _usersData.at(token);
-                return *(userData.ItUserName);
+                const Token token = viewToToken(tokenStr);
+                std::shared_lock lock{_mutex};
+                return _usersData.contains(token);
+            }
+
+            WebSocketUpdateInfo setSocket(const boost::string_view tokenStr, HTTP::Requests::Request&& request)
+            {
+                const Token token = viewToToken(tokenStr);
+
+                std::unique_lock lock{_mutex};
+                auto& userData = _usersData.at(token);
+                auto itWebSocket = userData._itWebSocket;
+                auto& ws = itWebSocket->second;
+                auto prevState = ws->getState().second;
+                ws->setSocket(std::move(request));
+
+                return WebSocketUpdateInfo{userData.getUserName(), prevState, itWebSocket->first, *ws};
             }
 
         private:
+            boost::asio::io_service& _service;
+
             std::map<Token, UserData> _usersData;
-            std::set<std::string, std::less<>> _usersNames;
+            NameSet _usersNames;
+            WebSocketMap _websockets;
 
             const AccessRights::RootAccessRightsNode _unauthorizedAllowedMethods;
             const AccessRights::RootAccessRightsNode _defaultAuthorizedAllowedMethods;
+
+            mutable std::shared_mutex _mutex;
+
+        private:
+            friend class UsersWebSockets;
+
         };
     }
 }

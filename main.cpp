@@ -35,8 +35,8 @@ void proccessRequest(HTTP::Requests::Request&& request, Factories::RootFactory& 
         {
             auto token = request.getToken();
             const Users::AccessRights::RootAccessRightsNode& accessRights = token.has_value()
-                                                                    ? usersData.getUsersAllowedMethods(token.value())
-                                                                    : usersData.getUnauthorizedAllowedMethods();
+                                                                    ? usersData.getUserAcessRights(token.value())
+                                                                    : usersData.getUnauthorizedUserAcessRights();
 
             const Users::AccessRights::Methods& allowedMethods = accessRights.getAllowedMethods(target); 
 
@@ -92,7 +92,7 @@ int main(int argc, char** argv)
 
 		boost::asio::io_service service;
 
-        Users::Data::UsersData usersData;
+        Users::Data::UsersData usersData{service};
         Factories::RootFactory rootFactory(usersData);
 
 		boost::asio::ip::tcp::acceptor acceptor(service, endpoint);
