@@ -15,12 +15,6 @@ namespace HTTP
             {
                 _isEmpty = false;
             }
-
-            NewUserMessage(const boost::string_view token, const boost::string_view name)
-                : AWebSocketMessage{'a' + token.to_string() + name.to_string()}
-            {
-                _isEmpty = false;
-            }
             
             ~NewUserMessage() = default;
         

@@ -10,8 +10,8 @@ namespace HTTP
             : public AWebSocketMessage
         {
         public:
-            IdentifiyingWebSocketMessage(const std::string& websocketToken, const boost::string_view name)
-                : AWebSocketMessage{'i' + websocketToken + name.to_string()}
+            IdentifiyingWebSocketMessage(const std::string& websocketToken, const std::string& username)
+                : AWebSocketMessage{'i' + websocketToken + username}
             {
                 _isEmpty = false;
             }

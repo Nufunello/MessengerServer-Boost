@@ -54,6 +54,8 @@
 	<script>
 		let socket = new WebSocket("ws://127.0.0.1:8001/websocket");
 		let map = new Map();
+		let mytoken = "";
+		let myname = "";
 
 		socket.onopen = function(e) {
 			console.log("Connection established");
@@ -62,54 +64,57 @@
 		socket.onmessage = function(event) {
 			let state = event.data[0];
 			let message = event.data.substr(1);
-			let token = message.substr(0, 35);
+			let uuidLength = 36;
+			let token = message.substr(0, uuidLength - 1);
+
+			if (token === mytoken)
+			{
+				return;
+			}
 
 			switch (state)
 			{
 				case 'a':
 				{
-					let username = message.substr(36);
+					let username = message.substr(uuidLength);
 					map.set(token, username + "+");
-					console.log("New user " + username + " has joined chat");
-					break;
-				}
-				case 'l':
-				{
-					let username = map.delete(token);
-					break;
-				}
-				case 'c':
-				{
-					if (map.has(token))
-					{
-						let username = map.get(token);
-						username = username.replace(/.$/,"-");
-						map.set(token, username);
-					}
-					else
-					{
-						console.log("Me: " + token);
-					}
-					break;
-				}
-				case 'o':
-				{
-					if (map.has(token))
-					{
-						let username = map.get(token);
-						username = username.replace(/.$/,"+");
-						map.set(token, username);
-					}
-					else
-					{
-						console.log("Me: " + token);
-					}
 					break;
 				}
 				case 'i':
 				{
-					let username = message.substr(36);
-					console.log("Me: " + username);
+					mytoken = token;
+					myname = message.substr(uuidLength);
+				}
+				case 'l':
+				{
+					for (let i = 0; i < message.length; i += uuidLength)
+					{
+						token = message.substr(i, i + uuidLength - 1);
+						map.delete(token);
+					}
+					break;
+				}
+				case 'c':
+				{
+					for (let i = 0; i < message.length; i += uuidLength)
+					{
+						token = message.substr(i, i + uuidLength - 1);
+						let username = map.get(token);
+						username = username.replace(/.$/,"-");
+						map.set(token, username);
+					}					
+					break;
+				}
+				case 'o':
+				{
+					for (let i = 0; i < message.length; i += uuidLength)
+					{
+						token = message.substr(i, i + uuidLength - 1);
+						let username = map.get(token);
+						username = username.replace(/.$/,"+");
+						map.set(token, username);
+					}
+					break;
 				}
 			}
 

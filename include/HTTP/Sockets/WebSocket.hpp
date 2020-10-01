@@ -50,6 +50,7 @@ namespace HTTP
             inline void setLogouted()
             {
                 _state = State::Logouted;
+                _stateChanged = true;
             }
 
             inline void updateState(const boost::system::error_code& errorCode)
@@ -57,7 +58,7 @@ namespace HTTP
                 if (_state != State::Logouted)
                 {
                     const State _prevState = _state;
-                    _state = errorCode == boost::beast::websocket::error::closed || errorCode == boost::asio::error::operation_aborted ? State::Closed : State::Open;
+                    _state = errorCode.failed() ? State::Closed : State::Open;
                     _stateChanged = _prevState != _state || _stateChanged;
                 }
             }
@@ -94,7 +95,9 @@ namespace HTTP
             {
                 if (_state == State::Open)
                 {
-                    _websocket.write_some(true, boost::asio::buffer(message.asString()));
+                    boost::system::error_code ec;
+                    _websocket.write_some(true, boost::asio::buffer(message.asString()), ec);
+                    updateState(ec);
                 }
             }
 

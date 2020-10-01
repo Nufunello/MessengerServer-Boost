@@ -8,6 +8,8 @@
 
 #include "HTTP/Sockets/IdentifiyingWebSocketMessage.hpp"
 
+#include "Subscribes/ActiveUsersSubscribe.hpp"
+
 #include "Users/Data/UsersData.hpp"
 
 namespace Handlers
@@ -16,8 +18,9 @@ namespace Handlers
         : public AAuthorizedHandler
     {
     public:
-        WebSocketHandler(Users::Data::UsersData& usersData)
+        WebSocketHandler(Users::Data::UsersData& usersData, Subscribes::ActiveUsersSubscribe& activeUsersSubscribes)
             : _usersData{usersData}
+            , _activeUsersSubscribes{activeUsersSubscribes}
         {
         }
 
@@ -37,12 +40,18 @@ namespace Handlers
             }
 
             const auto reqToken = request.getToken();
-            Users::Data::WebSocketUpdateInfo info = _usersData.setSocket(reqToken.value(), std::move(request));
+            auto [username, prevState, websocketToken, websocket] = _usersData.setSocket(reqToken.value(), std::move(request));
 
-            if (info.PrevState == HTTP::Sockets::WebSocket::State::FirstConnection)
+            HTTP::Sockets::IdentifiyingWebSocketMessage message{Users::Data::TokenToStr(websocketToken), username};
+            websocket->write(message);
+            
+            if (prevState == HTTP::Sockets::WebSocket::State::FirstConnection)
             {
-                HTTP::Sockets::IdentifiyingWebSocketMessage message{Users::Data::TokenToStr(info.WebSocketToken), info.UserName};
-                info.WebSocket.write(message);
+                _activeUsersSubscribes.addSubscribe(websocketToken, username, websocket);
+            }
+            else
+            {
+                _activeUsersSubscribes.sendStatus(websocket);
             }
 
             return std::make_unique<HTTP::Responses::WebSocketResponse>();
@@ -50,6 +59,7 @@ namespace Handlers
 
     private:
         Users::Data::UsersData& _usersData;
+        Subscribes::ActiveUsersSubscribe& _activeUsersSubscribes;
 
     };
 }

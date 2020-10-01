@@ -22,17 +22,17 @@ namespace Users
         using NameSet = std::set<std::string, std::less<>>;
         using WebSocketMap = std::map<Token, std::shared_ptr<HTTP::Sockets::WebSocket>>;
 
-        std::string TokenToStr(const Token& token)
+        inline std::string TokenToStr(const Token& token)
         {
             return boost::uuids::to_string(token);
         }
 
         struct WebSocketUpdateInfo
         {
-            const boost::string_view UserName;
+            const std::string& UserName;
             const HTTP::Sockets::WebSocket::State PrevState;
             const Token& WebSocketToken;
-            HTTP::Sockets::WebSocket& WebSocket;
+            std::shared_ptr<HTTP::Sockets::WebSocket> WebSocket;
         };
 
         class UserData
@@ -46,15 +46,11 @@ namespace Users
 
             inline ~UserData()
             {
-                auto pWS = _itWebSocket->second;
-                if (pWS)
-                {
-                    pWS->setLogouted();
-                }
+                _itWebSocket->second->setLogouted();
             }
 
         public:
-            inline boost::string_view getUserName() const
+            inline const std::string& getUserName() const
             {
                 return *_itUserName;
             }
@@ -127,6 +123,7 @@ namespace Users
                 const auto& addedUser = _usersData.emplace(std::piecewise_construct
                                 , std::forward_as_tuple(std::move(token))
                                 , std::forward_as_tuple(_defaultAuthorizedAllowedMethods, std::move(itUserName), std::move(itWebSocket))).first->second;
+
                 boost::ignore_unused(addedUser);
                 return tokenStr;
             }
@@ -227,7 +224,7 @@ namespace Users
                 auto prevState = ws->getState().second;
                 ws->setSocket(std::move(request));
 
-                return WebSocketUpdateInfo{userData.getUserName(), prevState, itWebSocket->first, *ws};
+                return WebSocketUpdateInfo{userData.getUserName(), prevState, itWebSocket->first, ws};
             }
 
         private:

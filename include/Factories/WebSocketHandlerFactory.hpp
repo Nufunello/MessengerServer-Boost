@@ -10,8 +10,8 @@ namespace Factories
         : public AHandlerFactory
     {
     public:
-        WebSocketHandlerFactory(Users::Data::UsersData& usersData)
-            : _websocketHandler{usersData}
+        WebSocketHandlerFactory(Users::Data::UsersData& usersData, Subscribes::ActiveUsersSubscribe& activeUsersSubscribes)
+            : _websocketHandler{usersData, activeUsersSubscribes}
         {
             AHandlerFactory::setHandler(&_websocketHandler);
         }

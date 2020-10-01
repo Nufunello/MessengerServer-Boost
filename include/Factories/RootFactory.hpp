@@ -12,10 +12,10 @@ namespace Factories
         : public AMappedHandlerFactory
     {
     public:
-        RootFactory(Users::Data::UsersData& usersData)
+        RootFactory(Users::Data::UsersData& usersData, Subscribes::ActiveUsersSubscribe& activeUsersSubscribes)
             : AMappedHandlerFactory{
                       "login", std::make_unique<LoginFactory>(usersData)
-                    , "websocket", std::make_unique<WebSocketHandlerFactory>(usersData)
+                    , "websocket", std::make_unique<WebSocketHandlerFactory>(usersData, activeUsersSubscribes)
                     , "chat", std::make_unique<ChatFactory>()
             }
             , _rootHandler{}

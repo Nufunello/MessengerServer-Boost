@@ -1,12 +1,15 @@
-#include <iostream>
-
 #include "Users/Data/UsersData.hpp"
 
 #include "HTTP/Responses/BadRequestResponse.hpp"
 #include "HTTP/Responses/InternalServerErrorResponse.hpp"
 
+#include "Subscribes/ActiveUsersSubscribe.hpp"
+
 #include "Factories/RootFactory.hpp"
 #include "Factories/LoginFactory.hpp"
+
+#include <iostream>
+#include <thread>
 
 #include <boost/asio/io_service.hpp>
 
@@ -93,7 +96,15 @@ int main(int argc, char** argv)
 		boost::asio::io_service service;
 
         Users::Data::UsersData usersData{service};
-        Factories::RootFactory rootFactory(usersData);
+        Subscribes::ActiveUsersSubscribe activeUsersSubscribe;
+        std::thread notifyThread {[&activeUsersSubscribe](){
+            while (true)
+            {
+                activeUsersSubscribe.updateSubscribers();
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            }
+        }};
+        Factories::RootFactory rootFactory(usersData, activeUsersSubscribe);
 
 		boost::asio::ip::tcp::acceptor acceptor(service, endpoint);
         boost::asio::ip::tcp::socket socket{service};
